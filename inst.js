@@ -4,7 +4,7 @@
 const PA = window.PA, A = () => PA.app, f1 = PA.f1, DEG = PA.DEG, $ = id => document.getElementById(id);
 const MONO = '"IBM Plex Mono",ui-monospace,monospace';
 const box = $('inst');
-let open = false, closedFor = null, step = 1, nextI = -1, gab = false;
+let open = false, closedFor = null, step = 1, nextI = -1, gab = false, zoom = 2, zc = null, iso = true;
 const STEPS = [.5, 1, 2, 6];
 
 function show(on) {
@@ -44,6 +44,8 @@ $('iLp').addEventListener('click', () => law(1));
 $('iLm').addEventListener('click', () => law(-1));
 $('iStep').addEventListener('click', () => { step = STEPS[(STEPS.indexOf(step) + 1) % STEPS.length]; $('iStepV').textContent = String(step).replace('.', ','); });
 $('iGab').addEventListener('click', e => { gab = !gab; e.currentTarget.classList.toggle('on', gab); msg(gab ? 'Gabarito ligado: os defeitos reais aparecem nas telas.' : 'Gabarito desligado.'); A().refresh(); });
+$('iZoom').addEventListener('click', () => { zoom = zoom >= 4 ? 1 : zoom + 1; zc = null; $('iZoomV').textContent = zoom + '×'; A().refresh(); });
+$('iIso').addEventListener('click', e => { iso = !iso; e.currentTarget.classList.toggle('on', iso); A().refresh(); });
 $('iClr').addEventListener('click', () => { if (PA.live.mode === 'vivo') { $('lvClear').click(); msg('C-scan limpo.'); } });
 $('iRecB').addEventListener('click', () => { $('recBtn').click(); });
 $('iSave').addEventListener('click', () => { const r = PA.live.rec; if (r && r.on) $('recBtn').click(); else msg('Nada sendo gravado. Toque em Gravar, varra a junta e depois em Salvar arquivo.'); });
@@ -132,7 +134,12 @@ function readouts(C, st) {
 
 PA.hooks.afterDraw = (C, S, vst0) => {
   if (!open) return;
-  const vst = Object.assign({}, vst0, { showDef: gab, train: !gab });
+  if (zoom > 1) {
+    const p = vst0.peak, fold = C.cfg.disp.fold;
+    const tgt = p && p.ok ? [p.x, fold ? p.depth : p.zu] : (zc || [0, fold ? C.T / 2 : C.T]);
+    if (!zc || Math.hypot(tgt[0] - zc[0], tgt[1] - zc[1]) > 10 / zoom) zc = [Math.round(tgt[0]), Math.round(tgt[1])];
+  }
+  const vst = Object.assign({}, vst0, { showDef: gab, train: !gab, showCov: false, zoom, zc: zoom > 1 ? zc : null, iso });
   PA.drawSector($('iSec'), C, S, vst);
   drawAV($('iAsc'), C, S, vst);
   PA.drawTop($('iTop'), C, (PA.hooks.vol && PA.hooks.vol()) || A().V, vst);

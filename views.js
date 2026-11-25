@@ -38,36 +38,45 @@ PA.drawSector = function (cv, C, S, st) {
   if (!list.length) { txt(ctx, 'Nenhuma lei focal válida', 12 * dpr, 24 * dpr, '#e9ecef', 'left', 'alphabetic', 13, dpr); return; }
   const fold = cfg.disp.fold;
   const zmaxU = Math.min(C.legs * T, C.range * Math.max(...list.map(l => l.cth)));
-  const zTop = -(Math.max(...list.map(l => l.hc)) + cfg.probe.nAct * cfg.probe.pitch * Math.sin(cfg.wedge.angle * DEG) / 2 + 2), zBot = fold ? T + Math.max(2, C.W.botH + 1) : zmaxU + 1;
+  let zTop = -(Math.max(...list.map(l => l.hc)) + cfg.probe.nAct * cfg.probe.pitch * Math.sin(cfg.wedge.angle * DEG) / 2 + 2), zBot = fold ? T + Math.max(2, C.W.botH + 1) : zmaxU + 1;
   const Lsel = list[st.law] || list[0], eA = C.L.el(Lsel.k0), eB = C.L.el(Lsel.k0 + Lsel.n - 1);
   let xs = [C.L.xf, eA.x, eB.x];
   list.forEach(L => { xs.push(L.xe); xs.push(L.xe + dir * (fold ? Math.min(C.range * L.sth, zmaxU * L.sth / L.cth) : zmaxU * L.sth / L.cth)); });
   if (C.W.capHalf) xs.push(-C.W.capHalf - 3, C.W.capHalf + 3);
   let xl = Math.min(...xs) - 2, xh = Math.max(...xs) + 2;
-  
+  if (st.zoom > 1) {
+    const ww = (xh - xl) / st.zoom, hh = (zBot - zTop) / st.zoom, zc = st.zc || [0, fold ? T / 2 : T];
+    const nl = Math.max(xl, Math.min(xh - ww, zc[0] - ww / 2)), nt = Math.max(zTop, Math.min(zBot - hh, zc[1] - hh / 2));
+    xl = nl; xh = nl + ww; zTop = nt; zBot = nt + hh;
+  }
+
   const m = { l: 34 * dpr, r: 10 * dpr, t: 8 * dpr, b: 22 * dpr };
   { const kw = (W - m.l - m.r) / (xh - xl), want = Math.max(220, Math.min(460, Math.round(((zBot - zTop) * kw + m.t + m.b) / dpr))), fig = cv.parentElement;
     if (!cv.dataset.fixed && Math.abs(fig.clientHeight - want) > 6) { fig.style.height = want + 'px'; } }
   const k = Math.min((W - m.l - m.r) / (xh - xl), (H - m.t - m.b) / (zBot - zTop));
   const ox = m.l + ((W - m.l - m.r) - (xh - xl) * k) / 2, oy = m.t;
   const X = x => ox + (x - xl) * k, Z = z => oy + (z - zTop) * k;
-  const key = [W, H, fold, C.id, cfg.scan.mode === 'E' ? st.law : ''].join('|');
+  const key = [W, H, fold, C.id, cfg.scan.mode === 'E' ? st.law : '', st.zoom || 1, st.zc ? st.zc.join(',') : ''].join('|');
   if (cv._key !== key) { cv._key = key; cv._map = buildMap(C, W, H, X, Z, k, xl, zTop, fold, zBot); }
   const M = cv._map, lut = lutOf(cfg), img = ctx.getImageData(0, 0, W, H), Dd = img.data, gm = st.gmul;
+  const E = smoothEnv(S, C, cfg.disp.vfilt == null ? .35 : cfg.disp.vfilt);
+  let VAL = null; if (st.iso) { if (!cv._val || cv._val.length !== W * H) cv._val = new Float32Array(W * H); VAL = cv._val; VAL.fill(-1); }
   for (let p = 0; p < M.n; p++) {
     const px = M.px[p]; let best = 0;
     for (let j = 0; j < M.nc; j++) {
       const f = M.f[p * M.nc + j]; if (f < 0) continue;
       const i0 = f | 0, i1 = Math.min(list.length - 1, i0 + 1), fr = f - i0, zu = M.zu[p * M.nc + j];
-      const s0 = zu / list[i0].cth / C.DS, s1 = zu / list[i1].cth / C.DS;
+      const xp = (px % W - ox) / k + xl, s0 = Math.hypot(xp - list[i0].xe, zu) / C.DS, s1 = Math.hypot(xp - list[i1].xe, zu) / C.DS;
       if (s0 >= C.NS - 1 || s1 >= C.NS - 1) continue;
-      const a = S[i0].env, b = S[i1].env, q0 = s0 | 0, q1 = s1 | 0;
+      const a = E[i0], b = E[i1], q0 = s0 | 0, q1 = s1 | 0;
       const v = (a[q0] + (a[q0 + 1] - a[q0]) * (s0 - q0)) * (1 - fr) + (b[q1] + (b[q1 + 1] - b[q1]) * (s1 - q1)) * fr;
       if (v > best) best = v;
     }
     const c = Math.min(255, Math.max(0, best * gm * 255 | 0)) * 3, o = px * 4;
     Dd[o] = lut[c]; Dd[o + 1] = lut[c + 1]; Dd[o + 2] = lut[c + 2]; Dd[o + 3] = 255;
+    if (st.iso) VAL[px] = best;
   }
+  if (st.iso) isoLines(Dd, VAL, M, W, H, gm, darkPal(cfg), dpr);
   ctx.putImageData(img, 0, 0);
   const ink = darkPal(cfg) ? 'rgba(230,235,240,.75)' : '#5d6873';
   ctx.lineWidth = 1 * dpr;
@@ -116,7 +125,7 @@ PA.drawSector = function (cv, C, S, st) {
     if (L.gl) { ctx.strokeStyle = 'rgba(255,80,220,.8)'; ctx.setLineDash([3 * dpr, 3 * dpr]); ctx.beginPath(); ctx.moveTo(X(L.xe), Z(0));
       const s = Math.min(C.range, T / Math.cos(L.gl.th)); ctx.lineTo(X(L.xe + dir * s * Math.sin(L.gl.th)), Z(s * Math.cos(L.gl.th))); ctx.stroke(); ctx.setLineDash([]); }
     if (st.peak && st.peak.ok) { const p = st.peak, zz = fold ? p.depth : p.zu; ctx.strokeStyle = darkPal(cfg) ? '#fff' : '#111'; ctx.lineWidth = 1.6 * dpr;
-      ctx.beginPath(); ctx.arc(X(p.x), Z(zz), 5 * dpr, 0, 7); ctx.stroke(); }
+      ctx.lineWidth = 1.2 * dpr; const cx = X(p.x), cy = Z(zz), r1 = 6 * dpr, r2 = 13 * dpr; ctx.beginPath(); ctx.moveTo(cx - r2, cy); ctx.lineTo(cx - r1, cy); ctx.moveTo(cx + r1, cy); ctx.lineTo(cx + r2, cy); ctx.moveTo(cx, cy - r2); ctx.lineTo(cx, cy - r1); ctx.moveTo(cx, cy + r1); ctx.lineTo(cx, cy + r2); ctx.stroke(); }
   }
   // eixos
   const xstep = niceStep(xh - xl, X(xh) - X(xl), 46 * dpr);
@@ -126,6 +135,34 @@ PA.drawSector = function (cv, C, S, st) {
   for (let z = 0; z <= zBot; z += zstep) txt(ctx, String(z), m.l - 6 * dpr, Z(z), '#9aa3ad', 'right', 'middle', 11, dpr);
   cv._geom = { X, Z, k, xl, zTop, dir, fold };
 };
+/* filtro de vídeo do S-scan: suavização gaussiana leve ao longo do percurso (como o filtro de exibição dos aparelhos) */
+function smoothEnv(S, C, mm) {
+  const r = Math.round(mm / C.DS); if (r < 1) return S.map(x => x.env);
+  const w = []; let sw = 0; for (let j = -2 * r; j <= 2 * r; j++) { const v = Math.exp(-((j / r) ** 2)); w.push(v); sw += v; } const norm = 1 / sw;
+  return S.map(x => {
+    const e = x.env, n = e.length, o = new Float32Array(n);
+    for (let k = 0; k < n; k++) { let acc = 0; for (let j = -2 * r; j <= 2 * r; j++) { const q = k + j; if (q >= 0 && q < n) acc += e[q] * w[j + 2 * r]; } o[k] = acc * norm; }
+    // preserva a amplitude de pico de um eco isolado (o filtro alarga sem baixar o pico)
+    const g = Math.sqrt(1 + (r * C.DS / C.sig) ** 2); for (let k = 0; k < n; k++) o[k] *= g;
+    return o;
+  });
+}
+/* isobáricas: contornos de amplitude a −6 dB e −12 dB do pico da tela (só quando há indicação acima de 20 %) */
+function isoLines(D, VAL, M, W, H, gm, dark, dpr) {
+  let mx = 0; for (let p = 0; p < M.n; p++) { const v = VAL[M.px[p]]; if (v > mx) mx = v; }
+  if (mx * gm < .2) return;
+  const lv = [[mx / 2, dark ? [255, 255, 255] : [0, 0, 0]], [mx / 4, dark ? [150, 160, 170] : [96, 104, 114]]];
+  const th = dpr > 1.4 ? 1 : 0;
+  for (const [l, col] of lv) {
+    for (let p = 0; p < M.n; p++) {
+      const q = M.px[p], v = VAL[q]; if (v < l) continue;
+      const x = q % W, y = (q / W) | 0;
+      const edge = (x > 0 && VAL[q - 1] >= 0 && VAL[q - 1] < l) || (x < W - 1 && VAL[q + 1] >= 0 && VAL[q + 1] < l) || (y > 0 && VAL[q - W] >= 0 && VAL[q - W] < l) || (y < H - 1 && VAL[q + W] >= 0 && VAL[q + W] < l);
+      if (!edge) continue;
+      for (let a = 0; a <= th; a++) for (let b = 0; b <= th; b++) { const o = ((y + b) * W + x + a) * 4; if (o < D.length - 3) { D[o] = col[0]; D[o + 1] = col[1]; D[o + 2] = col[2]; } }
+    }
+  }
+}
 function rayPts(L, C, dir, fold) {
   const pts = [], T = C.T; let s = 0;
   for (let b = 1; b <= C.legs; b++) { const sb = Math.min(C.range, b * T / L.cth); const x = L.xe + dir * sb * L.sth, zu = sb * L.cth;

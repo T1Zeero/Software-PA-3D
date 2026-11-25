@@ -5,7 +5,7 @@ const PA = window.PA; PA.hooks = PA.hooks || {}; const DEG = PA.DEG, f1 = PA.f1,
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let cfg = PA.defaultCfg(), C = null, S = null, V = null, vtok = null, buildId = 0, scene = null;
-const st = { yp: 105, law: 0, gmul: 1, train: false, reveal: false, showDef: true, showCov: true, mode3d: 'corte', y1: null, y2: null, peak: null };
+const st = { iso: true, yp: 105, law: 0, gmul: 1, train: false, reveal: false, showDef: true, showCov: true, mode3d: 'corte', y1: null, y2: null, peak: null };
 
 function scenario(id) {
   const sc = PA.SCENARIOS.find(s => s.id === id) || PA.SCENARIOS[0];

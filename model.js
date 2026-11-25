@@ -162,18 +162,18 @@ PA.prims = function (cfg, W) {
     switch (d.type) {
       case 'trinca-raiz': {
         const zb = w.type === 'X' ? W.landB : T, h = Math.min(d.h, zb - .3), x2 = d.x + h * Math.tan(d.incl * DEG);
-        fc({ def: id, x1: d.x, z1: zb, x2, z2: zb - h, y1, y2, R: .5, corner: w.type === 'X' ? null : 'bot', rough: 1 });
+        fc({ def: id, x1: d.x, z1: zb, x2, z2: zb - h, y1, y2, R: 2.4, corner: w.type === "X" ? null : "bot", rough: 1 });
         pt({ def: id, x: x2, z: zb - h, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, tip: 1 });
         if (w.type === 'X') pt({ def: id, x: d.x, z: zb, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, tip: 1 });
         break; }
       case 'trinca-superficie': {
         const x0 = w.type === 'none' ? 0 : sd * W.capHalf, h = Math.min(d.h, T - .5), x2 = x0 + sd * h * Math.tan(d.incl * DEG);
-        fc({ def: id, x1: x0, z1: 0, x2, z2: h, y1, y2, R: .5, corner: 'top', rough: 1 });
+        fc({ def: id, x1: x0, z1: 0, x2, z2: h, y1, y2, R: 2.4, corner: "top", rough: 1 });
         pt({ def: id, x: x2, z: h, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, tip: 1 });
         break; }
       case 'trinca-interna': {
         const h = Math.min(d.h, T - 1), z = Math.min(Math.max(d.z, h / 2 + .3), T - h / 2 - .3), dx = h / 2 * Math.tan(d.incl * DEG);
-        fc({ def: id, x1: d.x - dx, z1: z + h / 2, x2: d.x + dx, z2: z - h / 2, y1, y2, R: .5, rough: 1 });
+        fc({ def: id, x1: d.x - dx, z1: z + h / 2, x2: d.x + dx, z2: z - h / 2, y1, y2, R: 2.4, rough: 1 });
         pt({ def: id, x: d.x + dx, z: z - h / 2, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, tip: 1 });
         pt({ def: id, x: d.x - dx, z: z + h / 2, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, tip: 1 });
         break; }
@@ -187,13 +187,13 @@ PA.prims = function (cfg, W) {
       case 'lof-bisel': {
         let z1 = Math.max(0, Math.min(d.z1, d.z2)), z2 = Math.min(T, Math.max(d.z1, d.z2)); if (z2 - z1 < .3) z2 = Math.min(T, z1 + .3);
         const hx = z => w.type === 'none' ? 0 : sd * W.half(z), cut = W.zs.filter(z => z > z1 && z < z2), zz = [z1, ...cut, z2];
-        for (let i = 0; i < zz.length - 1; i++) fc({ def: id, x1: hx(zz[i]), z1: zz[i], x2: hx(zz[i + 1]), z2: zz[i + 1], y1, y2, R: .35, corner: zz[i + 1] >= T - .01 && w.type === 'V' ? 'bot' : null });
+        for (let i = 0; i < zz.length - 1; i++) fc({ def: id, x1: hx(zz[i]), z1: zz[i], x2: hx(zz[i + 1]), z2: zz[i + 1], y1, y2, R: .5, rough: .04, corner: zz[i + 1] >= T - .01 && w.type === 'V' ? 'bot' : null });
         pt({ def: id, x: hx(z1), z: z1, y1: y1 + 1, y2: y2 - 1, R: .12, ph: 0, r: .3, tip: 1 });
         pt({ def: id, x: hx(z2), z: z2, y1: y1 + 1, y2: y2 - 1, R: .12, ph: 0, r: .3, tip: 1 });
         break; }
       case 'lof-entrepasses': {
         const z = Math.min(Math.max(d.z, .5), T - .5);
-        fc({ def: id, x1: d.x - d.larg / 2, z1: z, x2: d.x + d.larg / 2, z2: z, y1, y2, R: .45 });
+        fc({ def: id, x1: d.x - d.larg / 2, z1: z, x2: d.x + d.larg / 2, z2: z, y1, y2, R: .5, rough: .05 });
         pt({ def: id, x: d.x - d.larg / 2, z, y1: y1 + 1, y2: y2 - 1, R: .2, ph: 0, r: .3, tip: 1 });
         pt({ def: id, x: d.x + d.larg / 2, z, y1: y1 + 1, y2: y2 - 1, R: .2, ph: 0, r: .3, tip: 1 });
         break; }
@@ -203,11 +203,11 @@ PA.prims = function (cfg, W) {
         for (const s of sides) {
           const vis = -s;
           if (w.type === 'X') {
-            fc({ def: id, x1: s * g, z1: W.landB, x2: s * g, z2: W.landA, y1, y2, R: .5, vis });
+            fc({ def: id, x1: s * g, z1: W.landB, x2: s * g, z2: W.landA, y1, y2, R: .5, rough: .12, vis });
             pt({ def: id, x: s * g, z: W.landA, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, vis, tip: 1 });
             pt({ def: id, x: s * g, z: W.landB, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, vis, tip: 1 });
           } else {
-            fc({ def: id, x1: s * g, z1: T, x2: s * g, z2: W.landA, y1, y2, R: .5, corner: 'bot', vis });
+            fc({ def: id, x1: s * g, z1: T, x2: s * g, z2: W.landA, y1, y2, R: .5, rough: .12, corner: 'bot', vis });
             pt({ def: id, x: s * g, z: W.landA, y1: y1 + 1, y2: y2 - 1, R: .15, ph: 0, r: .3, vis, tip: 1 });
           }
         }
@@ -224,11 +224,11 @@ PA.prims = function (cfg, W) {
         for (let i = 0; i < 8; i++) { const a = y1 + r() * d.comp * .5, b = Math.min(y2, a + d.comp * (.25 + r() * .5));
           pt({ def: id, x: d.x + (r() - .5) * 2, z: Math.min(Math.max(d.z + (r() - .5) * d.h, .5), T - .5), y1: a, y2: b, R: .28, r: .35 + r() * d.h * .3 }); }
         for (let i = 0; i < 3; i++) { const an = r() * Math.PI, cx = d.x + (r() - .5) * 2, cz = d.z + (r() - .5) * d.h * .6, hh = d.h * .7, a = y1 + r() * d.comp * .4;
-          fc({ def: id, x1: cx - Math.cos(an) * hh / 2, z1: cz - Math.sin(an) * hh / 2, x2: cx + Math.cos(an) * hh / 2, z2: cz + Math.sin(an) * hh / 2, y1: a, y2: Math.min(y2, a + d.comp * .5), R: .35, hidden: 1 }); }
+          fc({ def: id, x1: cx - Math.cos(an) * hh / 2, z1: cz - Math.sin(an) * hh / 2, x2: cx + Math.cos(an) * hh / 2, z2: cz + Math.sin(an) * hh / 2, y1: a, y2: Math.min(y2, a + d.comp * .5), R: .6, rough: .7, hidden: 1 }); }
         break; }
       case 'mordedura': {
         const xt = w.type === 'none' ? 0 : sd * W.capHalf;
-        fc({ def: id, x1: xt, z1: 0, x2: xt + sd * .3, z2: d.prof, y1, y2, R: .4, Rc: 1.1, corner: 'top' });
+        fc({ def: id, x1: xt, z1: 0, x2: xt + sd * .3, z2: d.prof, y1, y2, R: .4, Rc: 1.1, rough: .3, corner: 'top' });
         break; }
       case 'sdh': pt({ def: id, x: d.x, z: d.z, y1, y2, R: Math.sqrt(d.d / 2), r: d.d / 2 }); break;
     }
@@ -262,6 +262,7 @@ function evalPrim(C, L, th, P, k, yp, fac, out) {
   }
   const ax = (P.x1 - xe) * dir, az = unfold(P.z1, k, T), bx = (P.x2 - xe) * dir, bz = unfold(P.z2, k, T);
   const dx = bx - ax, dz = bz - az, h = Math.hypot(dx, dz) || 1e-3, den = ux * dz - uz * dx;
+  if (P.segs) facetCoherent(C, L, th, P, k, yp, base, out); else {
   let t = Math.abs(den) > 1e-9 ? (ax * uz - az * ux) / den : .5, s, dp;
   if (Math.abs(den) > 1e-9 && t >= 0 && t <= 1) { s = (ax * dz - az * dx) / den; dp = 0; }
   else { t = Math.max(0, Math.min(1, t)); const cx = ax + t * dx, cz = az + t * dz; s = cx * ux + cz * uz; dp = cx * uz - cz * ux; }
@@ -276,6 +277,7 @@ function evalPrim(C, L, th, P, k, yp, fac, out) {
         if (a > 1e-6) out.push(s, a, P.ph);
       }
     }
+  }
   }
   if (P.corner && (P.corner === 'bot' ? k % 2 === 1 : k === 2)) {
     const first = P.corner === 'bot' ? Math.abs(P.z1 - T) <= Math.abs(P.z2 - T) : Math.abs(P.z1) <= Math.abs(P.z2);
@@ -304,6 +306,52 @@ function noiseRms(C, L, s) {
 }
 PA.noiseRms = noiseRms;
 
+/* ---------- facetas discretizadas: soma coerente de pequenos elementos (Kirchhoff) ----------
+   Cada faceta vira uma cadeia de elementos a cada λ/5. A rugosidade desloca os elementos ao longo da normal:
+   superfície lisa (falta de fusão) => reflexão especular forte e limpa; superfície rugosa (trinca, escória)
+   => espalhamento difuso em vários ângulos, com ecos de facetas ao longo da altura. */
+function gauss(r) { return Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r()); }
+function segFacets(C) {
+  const step = C.L.lam / 5, T = C.T;
+  C.prims.forEach((P, pi) => {
+    if (P.kind !== 'fac') return;
+    const dx = P.x2 - P.x1, dz = P.z2 - P.z1, h = Math.hypot(dx, dz); if (h < 1e-3) return;
+    const tx = dx / h, tz = dz / h, nx = -tz, nz = tx, n = Math.max(2, Math.ceil(h / step)), w = h / n;
+    const rg = PA.rng(pi * 7907 + Math.round(P.x1 * 100) * 13 + Math.round(P.z1 * 100) * 17 + Math.round(P.y1 * 10) * 5 + 1);
+    const ro = P.rough == null ? .03 : P.rough, sL = .28 * ro * Math.min(1, h / 2), sF = .075 * ro, rho = Math.exp(-w / .3);
+    const modes = [1, 2, 3, 5].map(m => [(rg() * 2 - 1) * sL / Math.sqrt(m), rg() * 6.283, m]);
+    const segs = new Float32Array(2 * n); let ar = gauss(rg);
+    for (let i = 0; i < n; i++) {
+      const t = (i + .5) * w; ar = rho * ar + Math.sqrt(1 - rho * rho) * gauss(rg);
+      let d = sF * ar; modes.forEach(([A, p, m]) => { d += A * Math.sin(Math.PI * m * t / h + p); });
+      segs[2 * i] = P.x1 + tx * t + nx * d; segs[2 * i + 1] = Math.min(T, Math.max(0, P.z1 + tz * t + nz * d));
+    }
+    P.segs = segs; P.sw = w; P.nx = nx; P.nz = nz; P.xm = (P.x1 + P.x2) / 2; P.zm = (P.z1 + P.z2) / 2;
+  });
+}
+function facetCoherent(C, L, th, P, k, yp, base, out) {
+  const T = C.T, dir = C.L.dir, ux = Math.sin(th), uz = Math.cos(th), xe = L.xe;
+  const nqx = P.nx * dir, nqz = k % 2 === 0 ? -P.nz : P.nz, c = Math.abs(ux * nqx + uz * nqz);
+  if (c < .02) return;
+  const qmx = (P.xm - xe) * dir, qmz = unfold(P.zm, k, T), sm = qmx * ux + qmz * uz;
+  if (sm < -5 || sm > C.range + 5) return;
+  if (elevF(C, L, P, Math.max(1, sm), yp, Math.max(1, sm) * ux) < 1e-3) return;
+  const sg = C.sig, w = 2 * Math.PI / C.lamP, sgs = P.segs, amp0 = P.R * P.sw * c * base * C.skP, bins = new Map();
+  for (let i = 0; i < sgs.length; i += 2) {
+    const qx = (sgs[i] - xe) * dir, qz = unfold(sgs[i + 1], k, T), s = qx * ux + qz * uz;
+    if (s < .5 || s > C.range) continue;
+    const dp = qx * uz - qz * ux, wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa)); if (lat < 1e-3) continue;
+    const a = amp0 * lat * Ax(L, s, true) * att(C, L, s), b = Math.floor(s / sg), ph = P.ph - w * s;
+    let e = bins.get(b); if (!e) { e = [0, 0, 0, 0]; bins.set(b, e); }
+    e[0] += a * Math.cos(ph); e[1] += a * Math.sin(ph); e[2] += a * s; e[3] += a;
+  }
+  bins.forEach(e => {
+    const A = Math.hypot(e[0], e[1]); if (A < 1e-6) return;
+    const sb = e[2] / e[3], el = elevF(C, L, P, sb, yp, sb * ux); if (el < 1e-3) return;
+    out.push(sb, A * el, Math.atan2(e[1], e[0]) + w * sb);
+  });
+}
+
 /* ---------- montagem do caso ---------- */
 PA.build = function (cfg) {
   const C = { cfg, W: PA.weld(cfg.weld), L: PA.laws(cfg), A: PA.atten(cfg), T: cfg.weld.T, legs: cfg.scan.legs, len: cfg.weld.len };
@@ -316,7 +364,7 @@ PA.build = function (cfg) {
   C.NS = 1024; C.DS = C.range / C.NS;
   const vmm = C.L.v / 1000, bw = cfg.probe.bw / 100;
   C.sig = (.88 / (bw * cfg.probe.f)) * vmm / 2 / 1.665; C.lamP = C.L.lam / 2;
-  C.prims = PA.prims(cfg, C.W);
+  C.prims = PA.prims(cfg, C.W); segFacets(C);
   // percurso dentro da solda (anisotropia)
   list.forEach(L => {
     const n = Math.ceil(C.range / .5) + 2, cw = new Float32Array(n); let acc = 0;
