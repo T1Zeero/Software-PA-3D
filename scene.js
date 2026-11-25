@@ -159,11 +159,14 @@ PA.Scene = function (host) {
     const wedge = new THREE.Mesh(wgeo, new THREE.MeshPhysicalMaterial({ color: '#d99a4e', roughness: .2, metalness: 0, transparent: true, opacity: .5, side: THREE.DoubleSide, clearcoat: .6, depthWrite: false }));
     wedge.castShadow = true; probe.add(wedge);
     elems = [];
-    const eg = new THREE.BoxGeometry(p.pitch * .82, .5, p.elev);
+    const ny = Math.max(1, p.ny || 1), eg = new THREE.BoxGeometry(p.pitch * .82, .5, p.elev / ny * (ny > 1 ? .88 : 1));
     for (let k = 0; k < p.nTot; k++) { const u = wd.u1 + k * p.pitch * Math.cos(om), h = wd.h1 + k * p.pitch * Math.sin(om);
       const m = new THREE.Mesh(eg, new THREE.MeshStandardMaterial({ color: '#444b53', emissive: '#000000', roughness: .5 }));
-      const zt = p.dual ? p.sep / 2 : 0; m.position.set(-dir * u, h + .3, zt); m.rotation.z = dir * om; probe.add(m); elems.push(m);
-      if (p.dual) { const r = new THREE.Mesh(eg, new THREE.MeshStandardMaterial({ color: '#2d5f8a', emissive: '#000000', roughness: .5 })); r.position.set(-dir * u, h + .3, -zt); r.rotation.z = dir * om; r.userData.rx = 1; probe.add(r); elems.push(r); } }
+      const zt = p.dual ? p.sep / 2 : 0;
+      for (let j = 0; j < ny; j++) { const dz = (j - (ny - 1) / 2) * p.elev / ny;
+        const mm = j ? new THREE.Mesh(eg, new THREE.MeshStandardMaterial({ color: '#444b53', emissive: '#000000', roughness: .5 })) : m;
+        mm.position.set(-dir * u, h + .3, zt + dz); mm.rotation.z = dir * om; mm.userData.k = k; probe.add(mm); elems.push(mm);
+        if (p.dual) { const r = new THREE.Mesh(eg, new THREE.MeshStandardMaterial({ color: '#2d5f8a', emissive: '#000000', roughness: .5 })); r.position.set(-dir * u, h + .3, -zt + dz); r.rotation.z = dir * om; r.userData.rx = 1; r.userData.k = k; probe.add(r); elems.push(r); } } }
     const arrL = p.nTot * p.pitch, um = wd.u1 + arrL / 2 * Math.cos(om), hm = wd.h1 + arrL / 2 * Math.sin(om);
     const pe = p.dual ? p.elev + p.sep : p.elev, hs = new THREE.Mesh(new THREE.BoxGeometry(arrL + 8, 14, pe + 8), new THREE.MeshStandardMaterial({ color: '#2b3038', metalness: .4, roughness: .35 }));
     hs.position.set(-dir * (um + Math.sin(om) * 8 * 0), hm + 7.6 * Math.cos(om) + .6, 0); hs.rotation.z = dir * om; hs.castShadow = true; probe.add(hs);
@@ -202,7 +205,7 @@ PA.Scene = function (host) {
     Object.keys(defMeshes).forEach(id => defMeshes[id].forEach(m => { m.visible = !st.train && !m.userData.tip && (C.prims.find(p => p.def === id) ? true : false); }));
     defG.children.forEach(m => { if (m.geometry.type === 'CylinderGeometry' && m.material && false) m.visible = true; });
     // elementos ativos
-    const L = list[st.law], dl = !!C.cfg.probe.dual; elems.forEach((m, j) => { const k = dl ? j >> 1 : j, rx = m.userData.rx, a = L && k >= L.k0 && k < L.k0 + L.n; m.material.color.set(a ? (rx ? '#3fa9ff' : '#ff6a3d') : (rx ? '#2d5f8a' : '#444b53')); m.material.emissive.set(a ? (rx ? '#1a7fd6' : '#ff4a1d') : '#000000'); });
+    const L = list[st.law], dl = !!C.cfg.probe.dual; elems.forEach((m, j) => { const k = m.userData.k, rx = m.userData.rx, a = L && k >= L.k0 && k < L.k0 + L.n; m.material.color.set(a ? (rx ? '#3fa9ff' : '#ff6a3d') : (rx ? '#2d5f8a' : '#444b53')); m.material.emissive.set(a ? (rx ? '#1a7fd6' : '#ff4a1d') : '#000000'); });
     // leque do feixe
     const pos = [], col = [], zz = zc + .15, cOr = new THREE.Color('#ff8a3d');
     const ptsOf = Lw => { const P = [[Lw.xc, Lw.zc, 0], [Lw.xe, 0, 0]]; let s = 0; for (let b = 1; b <= C.legs; b++) { const sb = Math.min(C.range, b * T / Lw.cth); P.push([Lw.xe + dir * sb * Lw.sth, PA.fold(sb * Lw.cth, T), sb]); if (sb >= C.range) break; } return P; };

@@ -25,17 +25,17 @@ PA.WEDGE_MATS = { rexolite: { nome: 'Rexolite', v: 2330 }, acrilico: { nome: 'Ac
 /* tipos de defeito: [chave, rótulo, padrão, unidade, min, max, passo] ou [chave, rótulo, padrão, 'sel', opções] */
 const LADO = [['esq', 'Esquerdo'], ['dir', 'Direito']];
 PA.DEF_TYPES = {
-  'trinca-raiz': { nome: 'Trinca na raiz', cor: '#ff4d6d', p: [['h', 'Altura', 3, 'mm', .5, 30, .5], ['x', 'Posição X', .5, 'mm', -20, 20, .1], ['incl', 'Inclinação', 0, '°', -45, 45, 1]] },
-  'trinca-superficie': { nome: 'Trinca na margem', cor: '#ff8fa3', p: [['lado', 'Lado', 'dir', 'sel', LADO], ['h', 'Altura', 2, 'mm', .3, 20, .1], ['incl', 'Inclinação', 0, '°', -45, 45, 1]] },
-  'trinca-interna': { nome: 'Trinca interna', cor: '#e5383b', p: [['h', 'Altura', 3, 'mm', .5, 30, .5], ['x', 'Posição X', 0, 'mm', -20, 20, .1], ['z', 'Profundidade do centro', 10, 'mm', 1, 80, .5], ['incl', 'Inclinação', 10, '°', -60, 60, 1]] },
+  'trinca-raiz': { nome: 'Trinca na raiz', cor: '#ff4d6d', p: [['h', 'Altura', 3, 'mm', .5, 30, .5], ['x', 'Posição X', .5, 'mm', -20, 20, .1], ['incl', 'Inclinação', 0, '°', -45, 45, 1], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
+  'trinca-superficie': { nome: 'Trinca na margem', cor: '#ff8fa3', p: [['lado', 'Lado', 'dir', 'sel', LADO], ['h', 'Altura', 2, 'mm', .3, 20, .1], ['incl', 'Inclinação', 0, '°', -45, 45, 1], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
+  'trinca-interna': { nome: 'Trinca interna', cor: '#e5383b', p: [['h', 'Altura', 3, 'mm', .5, 30, .5], ['x', 'Posição X', 0, 'mm', -20, 20, .1], ['z', 'Profundidade do centro', 10, 'mm', 1, 80, .5], ['incl', 'Inclinação', 10, '°', -60, 60, 1], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
   'trinca-transversal': { nome: 'Trinca transversal', cor: '#ffb3c1', p: [['h', 'Altura', 4, 'mm', .5, 30, .5], ['z', 'Profundidade do topo', 4, 'mm', 0, 80, .5]] },
-  'lof-bisel': { nome: 'Falta de fusão no bisel', cor: '#ffd23f', p: [['lado', 'Lado', 'esq', 'sel', LADO], ['z1', 'Profundidade inicial', 5, 'mm', 0, 80, .5], ['z2', 'Profundidade final', 12, 'mm', 0, 80, .5]] },
-  'lof-entrepasses': { nome: 'Falta de fusão entre passes', cor: '#f9c74f', p: [['z', 'Profundidade', 8, 'mm', 1, 80, .5], ['x', 'Centro X', 0, 'mm', -20, 20, .1], ['larg', 'Largura', 6, 'mm', 1, 30, .5]] },
-  'lop': { nome: 'Falta de penetração', cor: '#c77dff', p: [['lado', 'Face sem fusão', 'ambos', 'sel', [['ambos', 'Ambas'], ['esq', 'Esquerda'], ['dir', 'Direita']]]] },
+  'lof-bisel': { nome: 'Falta de fusão no bisel', cor: '#ffd23f', p: [['lado', 'Lado', 'esq', 'sel', LADO], ['z1', 'Profundidade inicial', 5, 'mm', 0, 80, .5], ['z2', 'Profundidade final', 12, 'mm', 0, 80, .5], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
+  'lof-entrepasses': { nome: 'Falta de fusão entre passes', cor: '#f9c74f', p: [['z', 'Profundidade', 8, 'mm', 1, 80, .5], ['x', 'Centro X', 0, 'mm', -20, 20, .1], ['larg', 'Largura', 6, 'mm', 1, 30, .5], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
+  'lop': { nome: 'Falta de penetração', cor: '#c77dff', p: [['lado', 'Face sem fusão', 'ambos', 'sel', [['ambos', 'Ambas'], ['esq', 'Esquerda'], ['dir', 'Direita']]], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
   'poro': { nome: 'Poro isolado', cor: '#3fc1ff', p: [['d', 'Diâmetro', 1.5, 'mm', .2, 6, .1], ['x', 'Posição X', 0, 'mm', -20, 20, .1], ['z', 'Profundidade', 10, 'mm', .5, 80, .5]] },
   'poro-agrupado': { nome: 'Porosidade agrupada', cor: '#4cc9f0', p: [['n', 'Quantidade', 9, '', 2, 40, 1], ['d', 'Diâmetro médio', 1, 'mm', .2, 4, .1], ['x', 'Centro X', 0, 'mm', -20, 20, .1], ['z', 'Profundidade', 9, 'mm', .5, 80, .5], ['raio', 'Raio do grupo', 3, 'mm', .5, 10, .5]] },
   'escoria': { nome: 'Inclusão de escória', cor: '#7ae582', p: [['x', 'Centro X', 1, 'mm', -20, 20, .1], ['z', 'Profundidade', 10, 'mm', 1, 80, .5], ['h', 'Altura', 1.5, 'mm', .3, 6, .1]] },
-  'mordedura': { nome: 'Mordedura', cor: '#ff9f1c', p: [['lado', 'Lado', 'dir', 'sel', LADO], ['prof', 'Profundidade', .8, 'mm', .1, 3, .1]] },
+  'mordedura': { nome: 'Mordedura', cor: '#ff9f1c', p: [['lado', 'Lado', 'dir', 'sel', LADO], ['prof', 'Profundidade', .8, 'mm', .1, 3, .1], ['az', 'Desvio em planta (orientação)', 0, '°', -45, 45, 1]] },
   'sdh': { nome: 'Furo lateral (SDH)', cor: '#ced4da', p: [['d', 'Diâmetro', 2, 'mm', .5, 6, .1], ['x', 'Posição X', 0, 'mm', -60, 60, .5], ['z', 'Profundidade', 10, 'mm', 1, 80, .5]] }
 };
 PA.newDefect = (type, y, comp, over) => {
@@ -99,7 +99,7 @@ PA.laws = function (cfg) {
     const Fs = sc.focus === 'depth' ? sc.fVal / Math.cos(th) : sc.focus === 'path' ? sc.fVal : Infinity;
     const gfoc = (rad, F) => { const z0 = Math.PI * rad * rad / lam; if (!isFinite(F)) return [rad, 0, z0]; const w = rad / Math.sqrt(1 + (z0 / F) ** 2), zw = F / (1 + (F / z0) ** 2); return [w, zw, Math.PI * w * w / lam]; };
     const [w0, Fe, zR] = gfoc(a, Fs + sw);
-    const b = p.elev / 2, [we0, Fee, zRe] = gfoc(b, Infinity);
+    const b = p.elev / 2, Fel = p.ny > 1 ? (p.dual ? p.cross / Math.cos(th) : (isFinite(Fs) ? Fs : Infinity)) + wpath * vW / v : Infinity, [we0, Fee, zRe] = gfoc(b, Fel);
     const ang = (Tc(th) * Del(be)) ** 2;
     let gl = null;
     for (const m of [1, -1]) {
@@ -158,7 +158,7 @@ PA.prims = function (cfg, W) {
   for (const d of cfg.defects) {
     if (!d.on) continue;
     const y1 = d.y, y2 = d.y + d.comp, id = d.id, sd = d.lado === 'dir' ? 1 : -1;
-    const r = PA.rng(parseInt(id.replace(/\D/g, '') || '7', 10) * 31 + d.y * 7 + 3);
+    const r = PA.rng(parseInt(id.replace(/\D/g, '') || '7', 10) * 31 + d.y * 7 + 3), n0 = out.length;
     switch (d.type) {
       case 'trinca-raiz': {
         const zb = w.type === 'X' ? W.landB : T, h = Math.min(d.h, zb - .3), x2 = d.x + h * Math.tan(d.incl * DEG);
@@ -232,6 +232,7 @@ PA.prims = function (cfg, W) {
         break; }
       case 'sdh': pt({ def: id, x: d.x, z: d.z, y1, y2, R: Math.sqrt(d.d / 2), r: d.d / 2 }); break;
     }
+    if (d.az) for (let i = n0; i < out.length; i++) out[i].az = d.az;
   }
   return out;
 };
@@ -249,55 +250,68 @@ function elevF(C, L, P, s, yp, hd) {
   if (P.y2 - P.y1 < .01) { const q = (P.y1 - yb) / we; return Math.exp(-2 * q * q); }
   return .5 * (PA.erf(SQ2 * (P.y2 - yb) / we) - PA.erf(SQ2 * (P.y1 - yb) / we));
 }
+/* geometria do feixe: percurso s, afastamento lateral dp e direção local (ux, uz) no referencial desdobrado.
+   Fora da solda anisotrópica o raio é reto; dentro dela segue o trajeto curvo pré-calculado (L.bent). */
+const G = [0, 0, 0, 0];
+function geo(C, L, th, qx, qz) {
+  const B = th === L.th && !C.noBend ? L.bent : null;
+  if (!B) { const ux = Math.sin(th), uz = Math.cos(th); G[0] = qx * ux + qz * uz; G[1] = qx * uz - qz * ux; G[2] = ux; G[3] = uz; return G; }
+  const h = B.h, n = B.n; let i = Math.max(0, Math.min(n - 1, Math.round((qx * L.sth + qz * L.cth) / h))), al = 0;
+  for (let it = 0; it < 6; it++) { al = (qx - B.X[i]) * B.UX[i] + (qz - B.Z[i]) * B.UZ[i]; const di = Math.round(al / h); if (!di) break; const ni = Math.max(0, Math.min(n - 1, i + di)); if (ni === i) break; i = ni; }
+  al = (qx - B.X[i]) * B.UX[i] + (qz - B.Z[i]) * B.UZ[i];
+  G[0] = i * h + al; G[1] = (qx - B.X[i]) * B.UZ[i] - (qz - B.Z[i]) * B.UX[i]; G[2] = B.UX[i]; G[3] = B.UZ[i]; return G;
+}
+PA.geo = geo;
 function evalPrim(C, L, th, P, k, yp, fac, out) {
   const T = C.T, dir = C.L.dir;
   if (P.vis && P.vis !== dir) return;
   if (P.legs && P.legs.indexOf(k) < 0) return;
-  const ux = Math.sin(th), uz = Math.cos(th), xe = L.xe, base = L.ang * C.cpl * fac;
+  const xe = L.xe, base = L.ang * C.cpl * fac * C.steerA, sk = C.skewT - (P.az || 0), skP = Math.exp(-((sk / 7) ** 2)), skC = Math.exp(-((sk / 10) ** 2));
   if (P.kind === 'pt') {
     if (k > 1 && ((k % 2 === 0 && Math.abs(P.z - T) < .01) || (k % 2 === 1 && Math.abs(P.z) < .01))) return;
-    const qx = (P.x - xe) * dir, qz = unfold(P.z, k, T), s = qx * ux + qz * uz;
+    const qx = (P.x - xe) * dir, qz = unfold(P.z, k, T); geo(C, L, th, qx, qz); const s = G[0], dp = G[1];
     if (s < .5 || s > C.range) return;
-    const dp = qx * uz - qz * ux, wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa)); if (lat < 1e-3) return;
+    const wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa)); if (lat < 1e-3) return;
     const el = elevF(C, L, P, s, yp, qx); if (el < 1e-3) return;
-    const a = P.R * lat * el * Ax(L, s, P.y2 - P.y1 > .01) * att(C, L, s) * base * (P.trans ? 1 : 1);
+    const a = P.R * lat * el * Ax(L, s, P.y2 - P.y1 > .01) * att(C, L, s) * base;
     if (a > 1e-6) out.push(s, a, P.ph);
     return;
   }
   const ax = (P.x1 - xe) * dir, az = unfold(P.z1, k, T), bx = (P.x2 - xe) * dir, bz = unfold(P.z2, k, T);
-  const dx = bx - ax, dz = bz - az, h = Math.hypot(dx, dz) || 1e-3, den = ux * dz - uz * dx;
-  if (P.segs) facetCoherent(C, L, th, P, k, yp, base, out); else {
-  let t = Math.abs(den) > 1e-9 ? (ax * uz - az * ux) / den : .5, s, dp;
-  if (Math.abs(den) > 1e-9 && t >= 0 && t <= 1) { s = (ax * dz - az * dx) / den; dp = 0; }
-  else { t = Math.max(0, Math.min(1, t)); const cx = ax + t * dx, cz = az + t * dz; s = cx * ux + cz * uz; dp = cx * uz - cz * ux; }
-  if (s > .5 && s < C.range) {
-    const wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa));
-    if (lat > 1e-3) {
-      const heff = Math.min(h, 1.2 * wa), nx = -dz / h, nz = dx / h, ci = Math.min(1, Math.abs(ux * nx + uz * nz));
-      const D = Math.acos(ci), ws = Math.max(2.5 * DEG, .5 * C.L.lam / heff), sp = Math.exp(-((D / ws) ** 2));
-      if (sp > 1e-3) {
-        const el = elevF(C, L, P, s, yp, s * ux);
-        const a = P.R * heff * sp * lat * el * Ax(L, s, true) * att(C, L, s) * base * C.skP;
-        if (a > 1e-6) out.push(s, a, P.ph);
+  const dx = bx - ax, dz = bz - az, h = Math.hypot(dx, dz) || 1e-3;
+  if (P.segs) facetCoherent(C, L, th, P, k, yp, base * skP, out); else {
+    geo(C, L, th, ax, az); const dA = G[1]; geo(C, L, th, bx, bz); const dB = G[1];
+    let t = dA * dB < 0 ? dA / (dA - dB) : (Math.abs(dA) < Math.abs(dB) ? 0 : 1);
+    const cx = ax + t * dx, cz = az + t * dz; geo(C, L, th, cx, cz); const s = G[0], dp = G[1], ux = G[2], uz = G[3];
+    if (s > .5 && s < C.range) {
+      const wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa));
+      if (lat > 1e-3) {
+        const heff = Math.min(h, 1.2 * wa), nx = -dz / h, nz = dx / h, ci = Math.min(1, Math.abs(ux * nx + uz * nz));
+        const D = Math.acos(ci), ws = Math.max(2.5 * DEG, .5 * C.L.lam / heff), sp = Math.exp(-((D / ws) ** 2));
+        if (sp > 1e-3) {
+          const el = elevF(C, L, P, s, yp, s * ux);
+          const a = P.R * heff * sp * lat * el * Ax(L, s, true) * att(C, L, s) * base * skP;
+          if (a > 1e-6) out.push(s, a, P.ph);
+        }
       }
     }
   }
-  }
   if (P.corner && (P.corner === 'bot' ? k % 2 === 1 : k === 2)) {
     const first = P.corner === 'bot' ? Math.abs(P.z1 - T) <= Math.abs(P.z2 - T) : Math.abs(P.z1) <= Math.abs(P.z2);
-    const cx = first ? ax : bx, cz = first ? az : bz, s2 = cx * ux + cz * uz;
+    const cx = first ? ax : bx, cz = first ? az : bz; geo(C, L, th, cx, cz); const s2 = G[0], dp2 = G[1], ux = G[2], uz = G[3];
     if (s2 > .5 && s2 < C.range) {
-      const dp2 = cx * uz - cz * ux, wa = L.wa(s2), lat = Math.exp(-2 * dp2 * dp2 / (wa * wa));
+      const wa = L.wa(s2), lat = Math.exp(-2 * dp2 * dp2 / (wa * wa));
       if (lat > 1e-3) {
-        const vert = Math.exp(-((Math.atan2(Math.abs(P.x2 - P.x1), Math.abs(P.z2 - P.z1)) / (35 * DEG)) ** 2)), thd = th / DEG;
+        const vert = Math.exp(-((Math.atan2(Math.abs(P.x2 - P.x1), Math.abs(P.z2 - P.z1)) / (35 * DEG)) ** 2)), thd = Math.atan2(Math.abs(ux), uz) / DEG;
         const fcn = C.cfg.scan.wave === 'L' ? .25 : Math.exp(-(((thd - 45) / 17) ** 2)) * .85 + .15;
         const el = elevF(C, L, P, s2, yp, s2 * ux);
-        const a = P.Rc * Math.pow(Math.min(h, wa), .7) * fcn * vert * lat * el * Ax(L, s2, true) * att(C, L, s2) * base * C.skC;
+        const a = P.Rc * Math.pow(Math.min(h, wa), .7) * fcn * vert * lat * el * Ax(L, s2, true) * att(C, L, s2) * base * skC;
         if (a > 1e-6) out.push(s2, a, P.ph);
       }
     }
   }
 }
+PA.evalPrim = evalPrim;
 PA.lawEvents = function (C, L, yp, out) {
   for (const P of C.prims) for (let k = 1; k <= C.legs; k++) {
     evalPrim(C, L, L.th, P, k, yp, 1, out);
@@ -334,25 +348,66 @@ function segFacets(C) {
   });
 }
 function facetCoherent(C, L, th, P, k, yp, base, out) {
-  const T = C.T, dir = C.L.dir, ux = Math.sin(th), uz = Math.cos(th), xe = L.xe;
-  const nqx = P.nx * dir, nqz = k % 2 === 0 ? -P.nz : P.nz, c = Math.abs(ux * nqx + uz * nqz);
-  if (c < .02) return;
-  const qmx = (P.xm - xe) * dir, qmz = unfold(P.zm, k, T), sm = qmx * ux + qmz * uz;
+  const T = C.T, dir = C.L.dir, xe = L.xe;
+  const nqx = P.nx * dir, nqz = k % 2 === 0 ? -P.nz : P.nz;
+  const qmx = (P.xm - xe) * dir, qmz = unfold(P.zm, k, T); geo(C, L, th, qmx, qmz); const sm = G[0];
   if (sm < -5 || sm > C.range + 5) return;
-  if (elevF(C, L, P, Math.max(1, sm), yp, Math.max(1, sm) * ux) < 1e-3) return;
-  const sg = C.sig, w = 2 * Math.PI / C.lamP, sgs = P.segs, amp0 = P.R * P.sw * c * base * C.skP, bins = new Map();
+  if (elevF(C, L, P, Math.max(1, sm), yp, Math.max(1, sm) * G[2]) < 1e-3) return;
+  const sg = C.sig, w = 2 * Math.PI / C.lamP, sgs = P.segs, amp0 = P.R * P.sw * base, bins = new Map();
+  let uxm = 0;
   for (let i = 0; i < sgs.length; i += 2) {
-    const qx = (sgs[i] - xe) * dir, qz = unfold(sgs[i + 1], k, T), s = qx * ux + qz * uz;
+    const qx = (sgs[i] - xe) * dir, qz = unfold(sgs[i + 1], k, T); geo(C, L, th, qx, qz); const s = G[0];
     if (s < .5 || s > C.range) continue;
-    const dp = qx * uz - qz * ux, wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa)); if (lat < 1e-3) continue;
-    const a = amp0 * lat * Ax(L, s, true) * att(C, L, s), b = Math.floor(s / sg), ph = P.ph - w * s;
+    const c = Math.abs(G[2] * nqx + G[3] * nqz); if (c < .02) continue;
+    const dp = G[1], wa = L.wa(s), lat = Math.exp(-2 * dp * dp / (wa * wa)); if (lat < 1e-3) continue;
+    const a = amp0 * c * lat * Ax(L, s, true) * att(C, L, s), b = Math.floor(s / sg), ph = P.ph - w * s; uxm = G[2];
     let e = bins.get(b); if (!e) { e = [0, 0, 0, 0]; bins.set(b, e); }
     e[0] += a * Math.cos(ph); e[1] += a * Math.sin(ph); e[2] += a * s; e[3] += a;
   }
   bins.forEach(e => {
     const A = Math.hypot(e[0], e[1]); if (A < 1e-6) return;
-    const sb = e[2] / e[3], el = elevF(C, L, P, sb, yp, sb * ux); if (el < 1e-3) return;
+    const sb = e[2] / e[3], el = elevF(C, L, P, sb, yp, sb * uxm); if (el < 1e-3) return;
     out.push(sb, A * el, Math.atan2(e[1], e[0]) + w * sb);
+  });
+}
+
+/* skew total = sonda torta + direcionamento eletrônico da matriz; perda de amplitude ao direcionar (diretividade do elemento na elevação) */
+PA.setSkewC = function (C, skew) {
+  const p = C.cfg.probe, mat = p.ny > 1, st = mat ? (p.steer || 0) : 0;
+  C.skewT = skew + st; C.tsk = Math.tan(C.skewT * DEG);
+  const lamW = C.L.lamW, ey = .9 * p.elev / Math.max(1, p.ny), sw = Math.asin(Math.min(.99, C.L.vW / C.L.v * Math.sin(Math.abs(st) * DEG)));
+  const x = Math.PI * ey * Math.sin(sw) / lamW, sinc = Math.abs(x) < 1e-6 ? 1 : Math.sin(x) / x;
+  C.steerA = mat ? Math.pow(Math.abs(sinc) * Math.cos(sw), 2) : 1;
+};
+/* Grãos colunares (modelo tipo Ogilvy simplificado): crescem perpendiculares à face de fusão e giram para a vertical
+   no centro do cordão. A energia desvia em direção à de maior velocidade: onda L ~45° do eixo do grão, onda T ao contrário. */
+PA.grainAng = function (C, x, z) {
+  const hw = Math.max(.5, C.W.half(z)), u = Math.max(-1, Math.min(1, x / hw)), bev = C.cfg.weld.bevel;
+  return u * Math.min(70, (90 - bev) * .75) * DEG * Math.pow(Math.abs(u), .6);
+};
+function bendRays(C) {
+  const cfg = C.cfg, T = C.T, dir = C.L.dir;
+  if (!cfg.mat.aniso || cfg.weld.type === 'none') return;
+  const fac = cfg.mat.bend == null ? 1 : cfg.mat.bend; if (fac <= 0) return;
+  const A = (cfg.scan.wave === 'L' ? 10 : -22) * DEG * fac, h = .25;
+  C.L.list.forEach(L => {
+    const n = Math.ceil((C.range + 5) / h) + 1, X = new Float32Array(n), Z = new Float32Array(n), UX = new Float32Array(n), UZ = new Float32Array(n);
+    let qx = 0, qz = 0, any = false;
+    for (let i = 0; i < n; i++) {
+      X[i] = qx; Z[i] = qz;
+      const x = L.xe + dir * qx, leg = Math.floor(qz / T), sg = leg % 2 === 0 ? 1 : -1, z = fold(qz, T);
+      let ux = L.sth, uz = L.cth;
+      if (C.W.inside(x, z)) {
+        const gam = PA.grainAng(C, x, z); let gx = -Math.sin(gam), gz = -Math.cos(gam);
+        let px = dir * ux, pz = sg * uz; const dt = px * gx + pz * gz; if (dt < 0) { gx = -gx; gz = -gz; }
+        const psi = Math.acos(Math.min(1, Math.abs(dt))), del = A * Math.sin(4 * psi), cr = px * gz - pz * gx, r = -Math.sign(cr || 1) * del;
+        const cr2 = Math.cos(r), sr = Math.sin(r), npx = px * cr2 - pz * sr, npz = px * sr + pz * cr2;
+        ux = npx * dir; uz = npz * sg; if (uz < .05) uz = .05; const nn = Math.hypot(ux, uz); ux /= nn; uz /= nn;
+        if (Math.abs(r) > .2 * DEG) any = true;
+      }
+      UX[i] = ux; UZ[i] = uz; qx += ux * h; qz += uz * h;
+    }
+    if (any) L.bent = { h, n, X, Z, UX, UZ };
   });
 }
 
@@ -361,8 +416,7 @@ PA.build = function (cfg) {
   const C = { cfg, W: PA.weld(cfg.weld), L: PA.laws(cfg), A: PA.atten(cfg), T: cfg.weld.T, legs: cfg.scan.legs, len: cfg.weld.len };
   const list = C.L.list;
   C.cpl = Math.pow(10, -cfg.scan.coupling / 20);
-  C.tsk = Math.tan(cfg.scan.skew * DEG);
-  C.skP = Math.exp(-((cfg.scan.skew / 7) ** 2)); C.skC = Math.exp(-((cfg.scan.skew / 10) ** 2));
+  PA.setSkewC(C, cfg.scan.skew);
   const thMax = list.length ? Math.max(...list.map(l => l.th)) : 60 * DEG;
   C.range = cfg.scan.range > 0 ? cfg.scan.range : Math.min(450, C.legs * C.T / Math.cos(thMax) + 6);
   C.NS = 1024; C.DS = C.range / C.NS;
@@ -375,9 +429,14 @@ PA.build = function (cfg) {
     for (let j = 0; j < n; j++) { const s = j * .5, z = fold(s * L.cth, C.T), x = L.xe + C.L.dir * s * L.sth; if (C.W.inside(x, z)) acc += .5; cw[j] = acc; }
     L.wlen = s => cw[Math.min(n - 1, Math.max(0, (s / .5) | 0))];
   });
+  // solda austenítica: desvio (curvatura) e alargamento do feixe nos grãos colunares
+  bendRays(C);
+  const kB = cfg.mat.aniso && cfg.weld.type !== 'none' ? (cfg.scan.wave === 'L' ? .006 : .014) * (cfg.mat.bend == null ? 1 : cfg.mat.bend) : 0;
+  list.forEach(L => { const w0 = L.wa; L.wa0 = w0; L.wa = kB ? (s => w0(s) * (1 + kB * L.wlen(s))) : w0; });
   // ganho de referência, ACG e TCG
   const Rref = Math.sqrt(cfg.disp.refD / 2);
-  const Aref = (L, s) => Rref * L.ang * Ax(L, Math.max(1, s), true) * att(C, L, Math.max(1, s));
+  // referência medida em bloco de material base (sem solda): sem atenuação extra nem alargamento da solda
+  const Aref = (L, s) => { s = Math.max(1, s); return Rref * L.ang * C.steerA * (L.a / L.wa0(s)) * Math.sqrt(L.b / L.we(s)) * Math.pow(10, -(2 * C.A.a * s) / 20) * (C.dual ? dualF(C, L, s) : 1); };
   const sMid = L => Math.max(2, (C.T / 2) / L.cth);
   let ref = list[0]; list.forEach(L => { if (Math.abs(L.th - 60 * DEG) < Math.abs(ref.th - 60 * DEG)) ref = L; });
   C.refLaw = ref;
@@ -405,15 +464,83 @@ PA.build = function (cfg) {
       for (let x = -hw + .25; x < hw; x += .5) {
         let cov = 0;
         for (const L of list) { for (let k = 1; k <= C.legs && !cov; k++) {
-          const qx = (x - L.xe) * C.L.dir, qz = unfold(z, k, C.T), s = qx * L.sth + qz * L.cth;
+          const qx = (x - L.xe) * C.L.dir, qz = unfold(z, k, C.T); geo(C, L, L.th, qx, qz); const s = G[0];
           if (s <= 0 || s > C.range) continue;
-          if (Math.abs(qx * L.cth - qz * L.sth) <= .59 * L.wa(s)) cov = k;
+          if (Math.abs(G[1]) <= .59 * L.wa(s)) cov = k;
         } if (cov) break; }
         cells.push([x, z, cov]);
       } }
   }
   C.cov = cells; C.covPct = cells.length ? cells.filter(c => c[2]).length / cells.length * 100 : 100;
   return C;
+};
+
+/* ---------- mapa de detectabilidade na seção ----------
+   Para cada célula da solda e da ZTA coloca um refletor de teste (orientação escolhida), roda todas as leis e pernas
+   do setup atual e devolve a amplitude em dB em relação à referência (TCG), a relação sinal/ruído e, quando o sinal
+   é baixo, o motivo: fora do feixe, desvio do feixe na solda, skew/orientação em planta, orientação na seção, ruído. */
+PA.detectMap = function (C, opt, progress, done) {
+  const cfg = C.cfg, T = C.T, W = C.W, dir = C.L.dir, list = C.L.list, tok = { cancel: false };
+  const orient = opt.orient || 'vol', azd = +opt.az || 0, h = opt.h || 3, step = opt.step || 1, Rref = Math.sqrt(cfg.disp.refD / 2);
+  const hz = cfg.weld.haz || 0, cells = [];
+  for (let z = step / 2; z < T; z += step) {
+    const hw = cfg.weld.type === 'none' ? 15 : W.half(z) + hz + 1;
+    for (let x = -hw + step / 2; x < hw; x += step) cells.push({ x, z });
+  }
+  const mkPrims = (c, kind) => {
+    if (kind === 'vol') return [{ kind: 'pt', x: c.x, z: c.z, y1: -1e4, y2: 1e4, R: Rref, r: 1, ph: Math.PI, vis: 0, legs: null }];
+    let vx, vz;
+    if (kind === 'bisel') { const sd = c.x >= 0 ? 1 : -1, sl = cfg.weld.type === 'none' ? Math.tan(cfg.weld.bevel * DEG) : (W.half(Math.max(0, c.z - .5)) - W.half(Math.min(T, c.z + .5))); vx = sd * sl; vz = -1; }
+    else if (kind === 'vert') { vx = 0; vz = 1; } else { vx = 1; vz = 0; }
+    const nn = Math.hypot(vx, vz); vx *= h / 2 / nn; vz *= h / 2 / nn;
+    const base = { y1: -1e4, y2: 1e4, vis: 0, legs: null, az: azd };
+    return [Object.assign({ kind: 'fac', x1: c.x - vx, z1: c.z - vz, x2: c.x + vx, z2: c.z + vz, R: .5, Rc: 0, corner: null, ph: Math.PI }, base),
+      Object.assign({ kind: 'pt', x: c.x - vx, z: c.z - vz, R: .15, r: .3, ph: 0, tip: 1 }, base), Object.assign({ kind: 'pt', x: c.x + vx, z: c.z + vz, R: .15, r: .3, ph: 0, tip: 1 }, base)];
+  };
+  const ev = [];
+  const meas = (prims, yp) => {
+    let best = 0, bs = 0, bl = null, bk = 1;
+    for (const L of list) for (let k = 1; k <= C.legs; k++) {
+      ev.length = 0; for (const P of prims) evalPrim(C, L, L.th, P, k, yp, 1, ev);
+      for (let j = 0; j < ev.length; j += 3) { const s = ev[j], v = ev[j + 1] * L.K[Math.min(C.NS - 1, (s / C.DS) | 0)]; if (v > best) { best = v; bs = s; bl = L; bk = k; } }
+    }
+    const db = best > 0 ? 20 * Math.log10(best / .8) : -99;
+    const nz = bl ? 3 * noiseRms(C, bl, Math.max(.5, bs)) * bl.K[Math.min(C.NS - 1, (bs / C.DS) | 0)] : 1;
+    return { db, sn: bl ? 20 * Math.log10(best / Math.max(1e-9, nz)) : -99, law: bl, leg: bk, s: bs };
+  };
+  const covered = c => {
+    for (const L of list) for (let k = 1; k <= C.legs; k++) {
+      const qx = (c.x - L.xe) * dir, qz = unfold(c.z, k, T); geo(C, L, L.th, qx, qz);
+      if (G[0] > .5 && G[0] < C.range && Math.abs(G[1]) <= .59 * L.wa(G[0])) return true;
+    }
+    return false;
+  };
+  const yp = 0, saveSk = C.skewT, saveTsk = C.tsk; let i = 0;
+  const run = () => {
+    if (tok.cancel) return;
+    const t0 = performance.now();
+    while (i < cells.length && performance.now() - t0 < 30) {
+      const c = cells[i++], r = meas(mkPrims(c, orient), yp);
+      c.db = r.db; c.sn = r.sn; c.th = r.law ? r.law.th / DEG : null; c.leg = r.leg;
+      c.st = r.db >= -6 && r.sn >= 6 ? 'bom' : r.db >= -14 && r.sn >= 6 ? 'fraco' : 'nao';
+      if (c.st !== 'bom') {
+        const cov = covered(c);
+        if (!cov) { C.noBend = true; const cs = covered(c); C.noBend = false; c.why = cs && C.L.list.some(L => L.bent) ? 'desvio' : 'fora'; }
+        else {
+          let why = null;
+          if (list.some(L => L.bent)) { C.noBend = true; const r2 = meas(mkPrims(c, orient), yp); C.noBend = false; if (r2.db >= r.db + 6) why = 'desvio'; }
+          if (!why && orient !== 'vol' && Math.abs(C.skewT - azd) > .5) { C.skewT = azd; C.tsk = Math.tan(azd * DEG); const r3 = meas(mkPrims(c, orient), yp); C.skewT = saveSk; C.tsk = saveTsk; if (r3.db >= r.db + 6) why = 'skew'; }
+          if (!why && orient !== 'vol') { const r4 = meas(mkPrims(c, 'vol'), yp); if (r4.db >= r.db + 6) why = 'orient'; }
+          if (!why) why = r.sn < 6 ? 'ruido' : 'aten';
+          c.why = why;
+        }
+      }
+    }
+    progress && progress(i / cells.length);
+    if (i < cells.length) setTimeout(run, 0); else done(cells);
+  };
+  setTimeout(run, 0);
+  return tok;
 };
 
 /* ---------- dados na posição atual ---------- */
@@ -480,8 +607,8 @@ PA.volumes = function (C, progress, done) {
 /* ---------- situações de campo ---------- */
 PA.defaultCfg = () => ({
   weld: { type: 'V', T: 20, bevel: 30, rootFace: 1.5, gap: 2, xMid: .5, capOver: 1.5, capH: 2, rootOver: 1.2, rootH: 1.4, hilo: 0, haz: 2, len: 300 },
-  mat: Object.assign({ preset: 'aco-carbono' }, PA.MATERIALS['aco-carbono']),
-  probe: { f: 5, bw: 60, nTot: 32, pitch: .6, elev: 10, nAct: 16, first: 1, dual: false, sep: 12, cross: 25 },
+  mat: Object.assign({ preset: 'aco-carbono', bend: 1 }, PA.MATERIALS['aco-carbono']),
+  probe: { f: 5, bw: 60, nTot: 32, pitch: .6, elev: 10, nAct: 16, first: 1, dual: false, sep: 12, cross: 25, ny: 1, steer: 0 },
   wedge: { mat: 'rexolite', vW: 2330, angle: 36, h1: 6, u1: 9, len: 38, width: 24 },
   scan: { mode: 'S', wave: 'T', a0: 40, a1: 70, astep: 1, eAng: 60, eStep: 1, focus: 'depth', fVal: 20, index: 30, side: 1, skew: 0, legs: 2, range: 0, coupling: 0, transfer: 0 },
   disp: { dGain: 6, corr: 'tcg', refD: 2, gate: { start: 3, width: 140, thr: 20, mode: 'path' }, axis: 'path', rf: false, fold: false, palette: 'amp', noise: true, geo: true, overlay: true },
@@ -522,6 +649,16 @@ PA.SCENARIOS = [
       Object.assign(c.disp, { corr: 'tcg', dGain: 6 }); c.disp.gate.width = 170;
       c.defects = [D('lof-bisel', 30, 40, { lado: 'esq', z1: 8, z2: 20 }), D('trinca-raiz', 95, 30, { h: 5, x: 0, incl: 0 }), D('escoria', 150, 25, { x: -2, z: 18, h: 2.5 }),
         D('poro-agrupado', 200, 20, { z: 30, x: 3, raio: 4, d: 1.5 }), D('lof-bisel', 245, 40, { lado: 'esq', z1: 30, z2: 42 })]; } },
+  { id: 'dma-inox', nome: 'Inox 50 mm, solda austenítica: dual matrix (DMA) com onda L',
+    nota: 'Mesmo tipo de junta do caso DLA, agora com cabeçote dual matrix de 2,25 MHz (2 × 16 × 4 elementos, Tx e Rx separados 14 mm, foco na elevação no cruzamento de 30 mm). Os grãos colunares desviam e alargam o feixe (trajeto real tracejado em azul no S-scan). Dois defeitos estão girados em planta: teste o direcionamento em skew na aba Cabeçote e veja o mapa de detectabilidade no fim da página.',
+    set: c => { Object.assign(c.weld, { type: 'X', T: 50, bevel: 25, rootFace: 2, gap: 2, xMid: .5, capOver: 2, capH: 2.5, haz: 3 });
+      Object.assign(c.mat, { preset: 'inox-austenitico' }, PA.MATERIALS['inox-austenitico'], { grain: 150, bend: 1 });
+      Object.assign(c.probe, { f: 2.25, bw: 60, nTot: 16, pitch: 1, elev: 12, nAct: 16, first: 1, dual: true, sep: 14, cross: 30, ny: 4, steer: 0 });
+      Object.assign(c.wedge, { mat: 'rexolite', vW: 2330, angle: 20, h1: 9, u1: 10, len: 50, width: 48 });
+      Object.assign(c.scan, { wave: 'L', mode: 'S', a0: 40, a1: 75, astep: 1, focus: 'depth', fVal: 30, index: 30, legs: 1 });
+      Object.assign(c.disp, { corr: 'tcg', dGain: 6 }); c.disp.gate.width = 180;
+      c.defects = [D('lof-bisel', 25, 40, { lado: 'esq', z1: 8, z2: 20, az: 12 }), D('trinca-interna', 85, 30, { h: 6, x: 1, z: 30, incl: 0, az: -10 }), D('lop', 140, 35),
+        D('escoria', 195, 20, { x: 3, z: 15, h: 2.5 }), D('lof-bisel', 240, 40, { lado: 'dir', z1: 30, z2: 42 })]; } },
   { id: 'grating', nome: 'Lóbulo de grade: pitch grande em 7,5 MHz',
     nota: 'Pitch de 1 mm em 7,5 MHz passa de λ/2 na cunha. Surgem ecos fantasmas de refletores reais em ângulos errados. Reduza o pitch para 0,5 mm ou a frequência para 5 MHz e veja sumirem.',
     set: c => { Object.assign(c.probe, { f: 7.5, pitch: 1, nAct: 16 }); c.defects = [D('lop', 60, 60), D('sdh', 180, 60, { d: 2, z: 10, x: 0 })]; } },

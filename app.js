@@ -15,7 +15,7 @@ function scenario(id) {
   st.law = -1; if (scene) scene.resetCam(); renderSetup(); rebuild(true);
 }
 function loadCfg(c, note) {
-  cfg = c; c.probe = Object.assign({ dual: false, sep: 12, cross: 25 }, c.probe); $('scenNote').textContent = note || ''; st.law = -1; if (scene) scene.resetCam(); renderSetup(); rebuild(true);
+  cfg = c; c.probe = Object.assign({ dual: false, sep: 12, cross: 25, ny: 1, steer: 0 }, c.probe); if (c.mat.bend == null) c.mat.bend = 1; $('scenNote').textContent = note || ''; st.law = -1; if (scene) scene.resetCam(); renderSetup(); rebuild(true);
 }
 let idxT = 0;
 function shiftIndex(ni, quiet) {
@@ -25,7 +25,7 @@ function shiftIndex(ni, quiet) {
   C.id = ++buildId; if (quiet) return; refresh();
   clearTimeout(idxT); idxT = setTimeout(() => { rebuild(); if (tab === 'varredura') renderSetup(); }, 700);
 }
-function setSkew(v) { cfg.scan.skew = Math.max(-20, Math.min(20, v)); if (!C) return; C.tsk = Math.tan(cfg.scan.skew * DEG); C.skP = Math.exp(-((cfg.scan.skew / 7) ** 2)); C.skC = Math.exp(-((cfg.scan.skew / 10) ** 2)); refresh(); }
+function setSkew(v) { cfg.scan.skew = Math.max(-20, Math.min(20, v)); if (!C) return; PA.setSkewC(C, cfg.scan.skew); refresh(); }
 
 /* ---------- formulários ---------- */
 const MATOPT = Object.entries(PA.MATERIALS).map(([k, v]) => [k, v.nome]).concat([['custom', 'Personalizado']]);
@@ -36,10 +36,11 @@ const F = {
     ['weld.rootOver', 'Largura extra da raiz por lado', 'mm', 0, 4, .1, c => c.weld.type === 'V'], ['weld.rootH', 'Altura da penetração', 'mm', 0, 4, .1, c => c.weld.type === 'V'],
     ['weld.hilo', 'Desalinhamento (hi-lo), + chapa direita mais baixa', 'mm', -4, 4, .1], ['weld.haz', 'ZTA considerada na cobertura', 'mm', 0, 6, .5], ['weld.len', 'Comprimento do cordão', 'mm', 100, 1000, 10]],
   material: [['mat.preset', 'Material', 'sel', MATOPT], ['mat.vL', 'Velocidade longitudinal', 'm/s', 1000, 8000, 10], ['mat.vT', 'Velocidade transversal', 'm/s', 1000, 5000, 10],
-    ['mat.grain', 'Tamanho médio de grão', 'µm', 5, 400, 5], ['mat.absorp', 'Absorção', 'dB/mm/MHz', 0, .02, .0005], ['mat.aniso', 'Solda anisotrópica (grãos colunares)', 'chk']],
+    ['mat.grain', 'Tamanho médio de grão', 'µm', 5, 400, 5], ['mat.absorp', 'Absorção', 'dB/mm/MHz', 0, .02, .0005], ['mat.aniso', 'Solda anisotrópica (grãos colunares)', 'chk'], ['mat.bend', 'Desvio e alargamento do feixe na solda (0 = desligado, 1 = típico)', '×', 0, 2.5, .1, c => c.mat.aniso]],
   cabecote: [['probe.f', 'Frequência', 'MHz', .5, 15, .25], ['probe.bw', 'Largura de banda (−6 dB)', '%', 20, 100, 5], ['probe.nTot', 'Número de elementos', '', 8, 128, 1],
     ['probe.pitch', 'Pitch', 'mm', .2, 2, .05], ['probe.elev', 'Elevação (dimensão passiva)', 'mm', 4, 30, .5], ['probe.nAct', 'Elementos ativos (abertura)', '', 2, 64, 1], ['probe.first', 'Primeiro elemento ativo', '', 1, 128, 1],
-    ['probe.dual', 'Dual linear (DLA, Tx e Rx separados)', 'chk'], ['probe.sep', 'Separação entre Tx e Rx (centros)', 'mm', 2, 40, .5, c => c.probe.dual],
+    ['probe.ny', 'Elementos na elevação (1 = linear, >1 = matriz)', '', 1, 16, 1], ['probe.steer', 'Direcionamento eletrônico em skew (matriz)', '°', -30, 30, .5, c => c.probe.ny > 1],
+    ['probe.dual', 'Dual: Tx e Rx separados (DLA ou DMA)', 'chk'], ['probe.sep', 'Separação entre Tx e Rx (centros)', 'mm', 2, 40, .5, c => c.probe.dual],
     ['probe.cross', 'Profundidade de cruzamento dos feixes (roof)', 'mm', 3, 150, 1, c => c.probe.dual]],
   cunha: [['wedge.mat', 'Material da cunha', 'sel', Object.entries(PA.WEDGE_MATS).map(([k, v]) => [k, v.nome + ' (' + v.v + ' m/s)'])], ['wedge.vW', 'Velocidade na cunha', 'm/s', 1500, 3000, 10],
     ['wedge.angle', 'Ângulo da cunha', '°', 0, 60, .5], ['wedge.h1', 'Altura do 1º elemento', 'mm', 1, 40, .1], ['wedge.u1', 'Distância do 1º elemento à frente da cunha', 'mm', 0, 80, .1],
@@ -85,6 +86,8 @@ function renderDerived() {
     rows = [r('Abertura ativa', f1(p.nAct * p.pitch) + ' mm'), r('λ na peça / na cunha', f1(L.lam) + ' / ' + f1(L.lamW) + ' mm'), r('Pitch / λ na cunha', sp.toFixed(2).replace('.', ',')),
       r('Campo próximo (lei de ref.)', C.refLaw ? f1(C.refLaw.N) + ' mm' : '—'), r('Feixe −6 dB no foco (lei de ref.)', C.refLaw ? f1(1.18 * C.refLaw.w0) + ' mm' : '—'),
       r('Feixe −6 dB na elevação', C.refLaw ? f1(1.18 * C.refLaw.we((C.T) / C.refLaw.cth)) + ' mm em T' : '—'),
+      r('Tipo de cabeçote', p.ny > 1 ? (p.dual ? 'DMA (dual matrix, ' + p.nTot + ' × ' + p.ny + ' por lado)' : 'Matriz ' + p.nTot + ' × ' + p.ny) : (p.dual ? 'DLA (dual linear)' : 'Linear')),
+      ...(p.ny > 1 ? [r('Perda por direcionar em skew', f1(-20 * Math.log10(Math.max(1e-6, C.steerA))) + ' dB')] : []),
       ...(p.dual && C.refLaw ? (() => { const L0 = C.refLaw, sc = p.cross / L0.cth, al = Math.atan(p.sep / 2 / sc), zs = []; for (let z = 1; z <= C.T * 2; z += .5) if (PA.dualF(C, L0, z / L0.cth) >= .5) zs.push(z);
         return [r('Ângulo de teto na peça (lei de ref.)', f1(al / DEG) + '°'), r('Zona −6 dB do cruzamento', zs.length ? f1(zs[0]) + ' a ' + f1(zs[zs.length - 1]) + ' mm de prof.' : '—')]; })() : []), r('Lóbulo de grade', list.some(l => l.gl) ? '<b class="warn">sim</b>' : 'não'), r('Duração do pulso (−6 dB)', f1(.88 / (p.bw / 100 * p.f)) + ' µs')]; }
   if (tab === 'cunha') { const ex = list.map(l => l.dirX = (l.xe - L.xf) * -L.dir); rows = [r('Ângulo natural (onda ' + (cfg.scan.wave === 'L' ? 'L' : 'T') + ')', f1(L.thNat / DEG) + '°'),

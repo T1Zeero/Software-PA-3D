@@ -31,9 +31,9 @@ h1{font-size:clamp(24px,2.6vw,34px);line-height:1.05;letter-spacing:-.02em;margi
 select,input[type=number]{background:#111417;color:var(--ink);border:1px solid #3a4048;border-radius:6px;font:inherit;font-size:15px;padding:6px 8px;min-height:36px}
 select:focus,input:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
 button{font:inherit;cursor:pointer}
-.app{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-areas:"v3d" "sec" "insp" "bar" "asc" "endv" "vols" "setup"}
-@media(min-width:780px){.app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"v3d sec" "insp insp" "bar bar" "asc endv" "vols vols" "setup setup"}}
-@media(min-width:1280px){.app{grid-template-columns:340px minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"setup v3d sec" "setup insp insp" "setup bar bar" "setup asc endv" "setup vols vols"}}
+.app{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-areas:"v3d" "sec" "insp" "bar" "asc" "endv" "vols" "det" "setup"}
+@media(min-width:780px){.app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"v3d sec" "insp insp" "bar bar" "asc endv" "vols vols" "det det" "setup setup"}}
+@media(min-width:1280px){.app{grid-template-columns:340px minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"setup v3d sec" "setup insp insp" "setup bar bar" "setup asc endv" "setup vols vols" "setup det det"}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .card h2{font-size:14px;font-weight:600;margin:0;display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;align-items:baseline}
 .card h2 span{color:var(--mute);font-weight:400;font-size:13px}
@@ -54,6 +54,17 @@ button{font:inherit;cursor:pointer}
 #sec{grid-area:sec}#sec .fig{height:400px;cursor:crosshair}
 #asc{grid-area:asc}#asc .fig{height:230px}
 #endv{grid-area:endv}#endv .fig{height:230px}
+#det{grid-area:det}
+#det .ctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+#det .seg{flex-wrap:wrap}
+#det .ctl label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mute)}
+#det .ctl input[type=number]{width:76px}
+#detFig{height:360px;position:relative}
+#detTip{position:absolute;pointer-events:none;background:rgba(10,12,14,.92);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:12px/1.4 "IBM Plex Mono",monospace;color:var(--ink);max-width:280px;z-index:3}
+#detLeg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--mute)}
+#detLeg i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-2px}
+#detSum{font-size:14px;margin:0;max-width:120ch}
+#detSum li{margin:2px 0}
 #vols{grid-area:vols}#vols .fig{height:150px;cursor:crosshair}
 .legend{display:flex;align-items:center;gap:8px;font:12px "IBM Plex Mono",monospace;color:var(--mute);flex-wrap:wrap}
 .legend .bar{flex:0 1 180px;height:8px;border-radius:2px}
@@ -305,6 +316,20 @@ body.inst-on{overflow:hidden}
     </div>
     <p class="note">Clique nas vistas para levar o cabeçote até aquele Y. Modelo de raios com feixe gaussiano para treino: as amplitudes são relativas ao furo de referência.</p>
   </section>
+
+  <section class="card" id="det" aria-label="Detectabilidade">
+    <h2>Detectabilidade na seção da solda <span id="detState">onde um defeito com esta orientação aparece, e por que some</span></h2>
+    <div class="ctl">
+      <div class="seg" id="detOr"><button data-o="vol" aria-pressed="true">Volumétrico (poro, escória)</button><button data-o="bisel" aria-pressed="false">Paralelo ao bisel (falta de fusão)</button><button data-o="vert" aria-pressed="false">Vertical (trinca)</button><button data-o="horiz" aria-pressed="false">Horizontal (entre passes)</button></div>
+      <label>Desvio em planta do defeito <input type="number" id="detAz" value="0" min="-45" max="45" step="1"> °</label>
+      <label>Altura do refletor de teste <input type="number" id="detH" value="3" min="1" max="10" step=".5"> mm</label>
+      <label><input type="checkbox" id="detBoth"> Somar os dois lados do cordão</label>
+    </div>
+    <div class="fig" id="detFig"><canvas id="detcv"></canvas><div id="detTip" hidden></div></div>
+    <div id="detLeg"></div>
+    <ul id="detSum"></ul>
+    <p class="note">Refletor de teste em cada ponto da seção, com o setup atual (leis, index, pernas, cabeçote, ganho com TCG). Bom: até 6 dB abaixo da referência com S/R ≥ 6 dB. Fraco: 6 a 14 dB abaixo. Passe o mouse para ver ângulo, perna e motivo.</p>
+  </section>
 </main>
 
 
@@ -361,5 +386,6 @@ body.inst-on{overflow:hidden}
 <script src="app.js"></script>
 <script src="live.js"></script>
 <script src="inst.js"></script>
+<script src="det.js"></script>
 </body>
 </html>

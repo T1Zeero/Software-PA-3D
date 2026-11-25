@@ -124,6 +124,10 @@ PA.drawSector = function (cv, C, S, st) {
     const pts = rayPts(L, C, dir, fold); pts.forEach(p => ctx.lineTo(X(p[0]), Z(p[1]))); ctx.stroke();
     if (L.gl) { ctx.strokeStyle = 'rgba(255,80,220,.8)'; ctx.setLineDash([3 * dpr, 3 * dpr]); ctx.beginPath(); ctx.moveTo(X(L.xe), Z(0));
       const s = Math.min(C.range, T / Math.cos(L.gl.th)); ctx.lineTo(X(L.xe + dir * s * Math.sin(L.gl.th)), Z(s * Math.cos(L.gl.th))); ctx.stroke(); ctx.setLineDash([]); }
+    if (L.bent) { const B = L.bent; ctx.strokeStyle = '#00d9ff'; ctx.lineWidth = 1.6 * dpr; ctx.setLineDash([5 * dpr, 3 * dpr]); ctx.beginPath(); let pz = null;
+      for (let i = 0; i < B.n && i * B.h <= C.range; i += 2) { const x = L.xe + dir * B.X[i], zu = B.Z[i], z = fold ? PA.fold(zu, T) : zu; if (zu > T * C.legs) break;
+        const brk = fold && pz != null && Math.floor(zu / T) !== Math.floor(pz / T); (i && !brk) ? ctx.lineTo(X(x), Z(z)) : ctx.moveTo(X(x), Z(z)); pz = zu; }
+      ctx.stroke(); ctx.setLineDash([]); }
     if (st.peak && st.peak.ok) { const p = st.peak, zz = fold ? p.depth : p.zu; ctx.strokeStyle = darkPal(cfg) ? '#fff' : '#111'; ctx.lineWidth = 1.6 * dpr;
       ctx.lineWidth = 1.2 * dpr; const cx = X(p.x), cy = Z(zz), r1 = 6 * dpr, r2 = 13 * dpr; ctx.beginPath(); ctx.moveTo(cx - r2, cy); ctx.lineTo(cx - r1, cy); ctx.moveTo(cx + r1, cy); ctx.lineTo(cx + r2, cy); ctx.moveTo(cx, cy - r2); ctx.lineTo(cx, cy - r1); ctx.moveTo(cx, cy + r1); ctx.lineTo(cx, cy + r2); ctx.stroke(); }
   }
