@@ -215,6 +215,7 @@ function draw() {
   $('secT').textContent = (cfg.scan.mode === 'S' ? 'S-scan ' + f1(cfg.scan.a0) + '° a ' + f1(cfg.scan.a1) + '°' : 'E-scan ' + f1(cfg.scan.eAng) + '°') + (cfg.disp.fold ? ', dobrado' : ', pernas desdobradas');
   $('covO').textContent = cfg.weld.type === 'none' ? '' : 'cobertura ' + f1(C.covPct) + '%';
   $('lbar').style.background = PA.paletteCss(cfg.disp.palette);
+  if (PA.hooks.afterDraw) PA.hooks.afterDraw(C, S, vst);
 }
 const curV = () => (PA.hooks.vol && PA.hooks.vol()) || V;
 function drawVols(vst) {

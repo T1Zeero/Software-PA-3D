@@ -76,9 +76,9 @@ function loop(t) {
   if (keys.has('rotr')) a.setSkew(cfg.scan.skew + 15 * dt);
   requestAnimationFrame(loop);
 }
-function press(k) { if (mode !== 'vivo') return; A().stop(); keys.add(k); if (!looping) { looping = true; lastT = performance.now(); requestAnimationFrame(loop); } }
+function press(k) { if (mode !== 'vivo' && !(mode === 'analise' && file && (k === 'up' || k === 'down'))) return; A().stop(); keys.add(k); if (!looping) { looping = true; lastT = performance.now(); requestAnimationFrame(loop); } }
 window.addEventListener('keydown', e => {
-  if (mode !== 'vivo') return; const t = e.target; if (t && /INPUT|SELECT|TEXTAREA/.test(t.tagName) && t.type !== 'range') return;
+  if (mode !== 'vivo' && !(mode === 'analise' && file)) return; const t = e.target; if (t && /INPUT|SELECT|TEXTAREA/.test(t.tagName) && t.type !== 'range') return;
   const k = KEYMAP[e.code]; if (!k) return; e.preventDefault(); fast = e.shiftKey; press(k);
 });
 window.addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) keys.delete(k); fast = e.shiftKey; });
@@ -91,7 +91,7 @@ document.querySelectorAll('#dpad button').forEach(b => {
 
 /* ---------- modos ---------- */
 function setMode(m) {
-  mode = m; keys.clear();
+  mode = m; keys.clear(); if (PA.hooks.onMode) setTimeout(() => PA.hooks.onMode(m, !!file), 0);
   document.querySelectorAll('#imode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
   $('pVivo').hidden = m !== 'vivo'; $('pAnalise').hidden = m !== 'analise'; $('pSim').hidden = m !== 'sim';
   const st = A().st;
@@ -219,5 +219,6 @@ $('anCsv').addEventListener('click', () => {
   $('anCsvInfo').textContent = ok ? 'Relatório CSV gerado.' : 'Não foi possível baixar o relatório aqui.';
 });
 
+PA.live = { get mode() { return mode; }, get rec() { return rec; }, get file() { return file; }, get inds() { return inds; }, press, release: k => keys.delete(k) };
 setMode('sim');
 })();

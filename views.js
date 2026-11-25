@@ -47,7 +47,7 @@ PA.drawSector = function (cv, C, S, st) {
   
   const m = { l: 34 * dpr, r: 10 * dpr, t: 8 * dpr, b: 22 * dpr };
   { const kw = (W - m.l - m.r) / (xh - xl), want = Math.max(220, Math.min(460, Math.round(((zBot - zTop) * kw + m.t + m.b) / dpr))), fig = cv.parentElement;
-    if (Math.abs(fig.clientHeight - want) > 6) { fig.style.height = want + 'px'; } }
+    if (!cv.dataset.fixed && Math.abs(fig.clientHeight - want) > 6) { fig.style.height = want + 'px'; } }
   const k = Math.min((W - m.l - m.r) / (xh - xl), (H - m.t - m.b) / (zBot - zTop));
   const ox = m.l + ((W - m.l - m.r) - (xh - xl) * k) / 2, oy = m.t;
   const X = x => ox + (x - xl) * k, Z = z => oy + (z - zTop) * k;
