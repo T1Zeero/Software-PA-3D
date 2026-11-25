@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador PAUT de soldas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: a bench tool for an experienced phased array inspector
+   IDEA the flaw detector's weld layout (3D, sector, A-scan, top/side/end) beside a full scan plan setup
+   PICTURE the welded plate cut at the probe position with the beam fan, driving every view
+   COLOUR charcoal instrument ground, graphite panels, amplitude palette, signal orange for cursors, gate yellow
+   TYPE IBM Plex Sans + IBM Plex Mono for readouts
+   LAYOUT laptop: setup column left, 3D and sector on top, scan bar, A-scan and end view, top/side views across; phone: stacked views then setup */
+:root{color-scheme:dark;--bg:#0f1113;--panel:#181b1f;--panel2:#1f2328;--line:#2c3137;--ink:#e9ecef;--mute:#9aa3ad;--acc:#ff6a3d;--gate:#d6c400;--cy:#7ad3ff}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif;overflow-x:clip;padding:14px max(1.4vw,16px,env(safe-area-inset-right,0px)) 28px max(1.4vw,16px,env(safe-area-inset-left,0px))}
+header.top{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:8px 24px;align-items:center;margin-bottom:12px}
+h1{font-size:clamp(24px,2.6vw,34px);line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:700;white-space:nowrap}
+.scenbox{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.scenbox label{font-size:14px;color:var(--mute)}
+.scenbox select{max-width:100%;flex:1 1 280px}
+#scenNote{grid-column:1/-1;margin:0;color:var(--mute);font-size:14px;max-width:110ch}
+#warn{grid-column:1/-1;margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+#warn li{font-size:13px;background:#3a2a12;color:#ffd58a;border:1px solid #6b4b16;border-radius:6px;padding:3px 8px}
+@media(max-width:700px){header.top{grid-template-columns:minmax(0,1fr)}h1{white-space:normal}}
+select,input[type=number]{background:#111417;color:var(--ink);border:1px solid #3a4048;border-radius:6px;font:inherit;font-size:15px;padding:6px 8px;min-height:36px}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button{font:inherit;cursor:pointer}
+.app{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-areas:"v3d" "sec" "bar" "asc" "endv" "vols" "setup"}
+@media(min-width:780px){.app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"v3d sec" "bar bar" "asc endv" "vols vols" "setup setup"}}
+@media(min-width:1280px){.app{grid-template-columns:340px minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"setup v3d sec" "setup bar bar" "setup asc endv" "setup vols vols"}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.card h2{font-size:14px;font-weight:600;margin:0;display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;align-items:baseline}
+.card h2 span{color:var(--mute);font-weight:400;font-size:13px}
+.fig{position:relative}
+.fig>canvas{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:4px}
+#v3d{grid-area:v3d;padding:0;overflow:hidden;position:relative;min-height:440px}
+#v3dhost{position:absolute;inset:0}
+#v3dhost canvas{display:block}
+.ov{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;pointer-events:none}
+.ov>*{pointer-events:auto}
+.ov .hint{font-size:13px;color:var(--mute);background:rgba(15,17,19,.7);padding:4px 8px;border-radius:6px;pointer-events:none}
+.seg{display:inline-grid;grid-auto-flow:column;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:rgba(15,17,19,.8)}
+.seg button{background:none;border:0;color:var(--mute);font-size:13px;padding:6px 10px;min-height:32px}
+.seg button[aria-pressed=true]{background:var(--acc);color:#1a0d08;font-weight:600}
+.btn{background:#262b31;border:1px solid #3a4048;color:var(--ink);font-size:14px;border-radius:6px;padding:6px 12px;min-height:36px;white-space:nowrap}
+.btn:hover{border-color:var(--mute)}
+.btn.on{background:var(--acc);color:#1a0d08;border-color:var(--acc);font-weight:600}
+#sec{grid-area:sec}#sec .fig{height:400px;cursor:crosshair}
+#asc{grid-area:asc}#asc .fig{height:230px}
+#endv{grid-area:endv}#endv .fig{height:230px}
+#vols{grid-area:vols}#vols .fig{height:150px;cursor:crosshair}
+.legend{display:flex;align-items:center;gap:8px;font:12px "IBM Plex Mono",monospace;color:var(--mute);flex-wrap:wrap}
+.legend .bar{flex:0 1 180px;height:8px;border-radius:2px}
+.legend label{display:flex;gap:6px;align-items:center;font-family:"IBM Plex Sans",sans-serif;font-size:13px;cursor:pointer}
+.legend input{accent-color:var(--acc)}
+#bar{grid-area:bar;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:10px 18px;align-items:start}
+@media(max-width:1000px){#bar{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#bar .ctl:first-child{grid-column:1/-1}}
+@media(max-width:560px){#bar{grid-template-columns:minmax(0,1fr)}}
+.ctl{display:flex;flex-direction:column;gap:4px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:14px;flex-wrap:wrap}
+.ctl output{font:13px "IBM Plex Mono",monospace;color:var(--acc);white-space:nowrap}
+.ctl small{color:var(--mute);font-size:13px}
+.ctl .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+input[type=range]{width:100%;accent-color:var(--acc);height:28px;margin:0}
+#read{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:2px;border-top:1px solid var(--line);padding-top:8px}
+#read div{display:flex;flex-direction:column;padding:4px 6px;border-radius:5px}
+#read span{font-size:12px;color:var(--mute)}
+#read b{font:600 16px "IBM Plex Mono",monospace;white-space:nowrap}
+#read .hot{background:#3b1b10}
+#read .hot b{color:#ff9a72}
+#setup{grid-area:setup;padding:0;overflow:hidden}
+#tabs{display:flex;flex-wrap:wrap;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--line);background:var(--panel2)}
+#tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);font-size:14px;padding:8px 8px 7px;min-height:38px}
+#tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--acc);font-weight:600}
+#form{padding:12px;display:flex;flex-direction:column;gap:12px}
+@media(min-width:1280px){#form{max-height:calc(100vh - 140px);overflow:auto}}
+.fields{display:grid;gap:8px 14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:780px) and (max-width:1279px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fld{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}
+.fld>span:first-child{color:#cdd3d9}
+.fld select{max-width:62%}
+.fld.chk{justify-content:flex-start;cursor:pointer}
+.fld.chk input{accent-color:var(--acc);width:17px;height:17px;flex:none}
+.num{display:flex;align-items:center;gap:6px;flex:none}
+.num input{width:88px;text-align:right}
+.num i{font-style:normal;color:var(--mute);font-size:13px;min-width:30px}
+.der{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin:0;border-top:1px solid var(--line)}
+.der div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #24282d;font-size:14px}
+.der dt{color:var(--mute)}.der dd{margin:0;font-family:"IBM Plex Mono",monospace;white-space:nowrap}
+.warn{color:#ffb454}.ok{color:#5fd38d}
+details summary{cursor:pointer;color:var(--cy);font-size:14px;padding:4px 0}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font:13px "IBM Plex Mono",monospace}
+th,td{padding:4px 6px;text-align:right;border-bottom:1px solid #24282d;white-space:nowrap}
+th{color:var(--mute);font-weight:400;font-family:"IBM Plex Sans",sans-serif}
+.note{font-size:13px;color:var(--mute);margin:0}
+ul.defs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+ul.defs li{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px}
+.dh{display:grid;grid-template-columns:18px 12px minmax(0,1fr) auto;gap:4px 8px;align-items:center;font-size:14px}
+.dh input{accent-color:var(--acc);width:16px;height:16px}
+.dh i{width:12px;height:12px;border-radius:3px;display:block}
+.dh span{grid-column:3;color:var(--mute);font:12px "IBM Plex Mono",monospace}
+.dh button{grid-row:1/3;grid-column:4;background:#262b31;border:1px solid #3a4048;color:var(--ink);border-radius:5px;font-size:13px;padding:6px 12px;min-height:34px}
+ul.defs details{margin-top:6px}
+ul.defs details .fields{margin-top:6px;grid-template-columns:minmax(0,1fr)!important}
+.ghost{background:none;border:1px solid #5a3a32;color:#ff9a72;border-radius:6px;font-size:13px;padding:6px 10px;margin-top:8px}
+.add{display:flex;gap:8px;flex-wrap:wrap}
+.add select{flex:1 1 180px}
+.add button{background:var(--acc);border:0;color:#1a0d08;font-weight:600;border-radius:6px;padding:8px 12px;min-height:36px}
+.trainrow{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.trainrow .ghost{margin:0}
+.volgrid{display:grid;gap:6px}
+.volgrid h3{margin:0;font-size:13px;font-weight:500;color:var(--mute)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Simulador PAUT de soldas</h1>
+  <div class="scenbox"><label for="scen">Situação de campo</label><select id="scen"></select></div>
+  <p id="scenNote"></p>
+  <ul id="warn"></ul>
+</header>
+
+<main class="app">
+  <aside class="card" id="setup" aria-label="Configuração">
+    <div id="tabs" role="tablist"></div>
+    <div id="form"></div>
+  </aside>
+
+  <section class="card" id="v3d" aria-label="Vista 3D">
+    <div id="v3dhost"></div>
+    <div class="ov">
+      <span class="hint">Arraste para girar, role para aproximar</span>
+      <span style="display:flex;gap:6px"><span class="seg" id="mode3d"><button data-m="corte" aria-pressed="true">Corte na sonda</button><button data-m="raiox" aria-pressed="false">Raio-X</button></span><button class="btn" id="recenter" style="min-height:32px;padding:4px 10px">Recentrar</button></span>
+    </div>
+  </section>
+
+  <section class="card" id="sec">
+    <h2><b id="secT">S-scan</b><span id="covO"></span></h2>
+    <div class="fig"><canvas id="seccv"></canvas></div>
+    <div class="legend">0%<span class="bar" id="lbar"></span>100% FSH
+      <label><input type="checkbox" id="cov" checked> Área sem cobertura</label>
+      <label><input type="checkbox" id="defShow" checked> Gabarito dos defeitos</label>
+      <span style="margin-left:auto">Clique para escolher a lei</span></div>
+  </section>
+
+  <section class="card" id="bar" aria-label="Varredura e leituras">
+    <div class="ctl">
+      <label for="yp">Posição de varredura (Y) <output id="ypO"></output></label>
+      <input type="range" id="yp" min="0" max="300" step="0.5" value="100">
+      <div class="row"><button class="btn" id="play">Varrer</button>
+        <select id="speed" aria-label="Velocidade de varredura"><option value="10">10 mm/s</option><option value="25" selected>25 mm/s</option><option value="50">50 mm/s</option><option value="100">100 mm/s</option></select>
+        <button class="btn" id="m1">Marcar Y1</button><button class="btn" id="m2">Marcar Y2</button><button class="btn" id="mc">Limpar</button></div>
+    </div>
+    <div class="ctl">
+      <label for="law">Lei focal (A-scan) <output id="lawO"></output></label>
+      <input type="range" id="law" min="0" max="30" step="1" value="15">
+    </div>
+    <div class="ctl">
+      <label for="gain">Ganho <output id="gainO"></output></label>
+      <input type="range" id="gain" min="-20" max="40" step="0.5" value="6">
+      <div class="row"><button class="btn" id="gm6">−6 dB</button><button class="btn" id="gp6">+6 dB</button><small id="gainSub"></small></div>
+    </div>
+    <div id="read"></div>
+  </section>
+
+  <section class="card" id="asc">
+    <h2>A-scan <span>gate A em amarelo, curva TCG em azul</span></h2>
+    <div class="fig"><canvas id="ascv"></canvas></div>
+  </section>
+
+  <section class="card" id="endv">
+    <h2>Vista final <span>projeção de todo o cordão no corte</span></h2>
+    <div class="fig"><canvas id="endcv"></canvas></div>
+  </section>
+
+  <section class="card" id="vols">
+    <h2>Vistas ao longo do cordão <span id="volState"></span></h2>
+    <div class="volgrid">
+      <h3>Topo (C-scan): posição transversal em relação ao eixo</h3>
+      <div class="fig"><canvas id="topcv"></canvas></div>
+      <h3>Lateral (B-scan): profundidade</h3>
+      <div class="fig"><canvas id="sidecv"></canvas></div>
+    </div>
+    <p class="note">Clique nas vistas para levar o cabeçote até aquele Y. Modelo de raios com feixe gaussiano para treino: as amplitudes são relativas ao furo de referência.</p>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="model.js"></script>
+<script src="views.js"></script>
+<script src="scene.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
