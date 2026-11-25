@@ -162,11 +162,12 @@ PA.Scene = function (host) {
     const eg = new THREE.BoxGeometry(p.pitch * .82, .5, p.elev);
     for (let k = 0; k < p.nTot; k++) { const u = wd.u1 + k * p.pitch * Math.cos(om), h = wd.h1 + k * p.pitch * Math.sin(om);
       const m = new THREE.Mesh(eg, new THREE.MeshStandardMaterial({ color: '#444b53', emissive: '#000000', roughness: .5 }));
-      m.position.set(-dir * u, h + .3, 0); m.rotation.z = dir * om; probe.add(m); elems.push(m); }
+      const zt = p.dual ? p.sep / 2 : 0; m.position.set(-dir * u, h + .3, zt); m.rotation.z = dir * om; probe.add(m); elems.push(m);
+      if (p.dual) { const r = new THREE.Mesh(eg, new THREE.MeshStandardMaterial({ color: '#2d5f8a', emissive: '#000000', roughness: .5 })); r.position.set(-dir * u, h + .3, -zt); r.rotation.z = dir * om; r.userData.rx = 1; probe.add(r); elems.push(r); } }
     const arrL = p.nTot * p.pitch, um = wd.u1 + arrL / 2 * Math.cos(om), hm = wd.h1 + arrL / 2 * Math.sin(om);
-    const hs = new THREE.Mesh(new THREE.BoxGeometry(arrL + 8, 14, p.elev + 8), new THREE.MeshStandardMaterial({ color: '#2b3038', metalness: .4, roughness: .35 }));
+    const pe = p.dual ? p.elev + p.sep : p.elev, hs = new THREE.Mesh(new THREE.BoxGeometry(arrL + 8, 14, pe + 8), new THREE.MeshStandardMaterial({ color: '#2b3038', metalness: .4, roughness: .35 }));
     hs.position.set(-dir * (um + Math.sin(om) * 8 * 0), hm + 7.6 * Math.cos(om) + .6, 0); hs.rotation.z = dir * om; hs.castShadow = true; probe.add(hs);
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(arrL + 8.2, 2, p.elev + 8.2), new THREE.MeshStandardMaterial({ color: '#ff6a3d', emissive: '#ff6a3d', emissiveIntensity: .3 }));
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(arrL + 8.2, 2, pe + 8.2), new THREE.MeshStandardMaterial({ color: '#ff6a3d', emissive: '#ff6a3d', emissiveIntensity: .3 }));
     strip.position.copy(hs.position); strip.position.y += 3 * Math.cos(om); strip.position.x += -dir * -3 * Math.sin(om) * 0; strip.rotation.z = dir * om; probe.add(strip);
     const top = new THREE.Vector3(-dir * (um + (arrL / 2 + 2) * Math.cos(om)), hm + 12, 0);
     const curve = new THREE.CatmullRomCurve3([top, top.clone().add(new THREE.Vector3(-dir * 14, 10, 0)), top.clone().add(new THREE.Vector3(-dir * 40, 16, 6)), top.clone().add(new THREE.Vector3(-dir * 75, 10, 20))]);
@@ -201,7 +202,7 @@ PA.Scene = function (host) {
     Object.keys(defMeshes).forEach(id => defMeshes[id].forEach(m => { m.visible = !st.train && !m.userData.tip && (C.prims.find(p => p.def === id) ? true : false); }));
     defG.children.forEach(m => { if (m.geometry.type === 'CylinderGeometry' && m.material && false) m.visible = true; });
     // elementos ativos
-    const L = list[st.law]; elems.forEach((m, k) => { const a = L && k >= L.k0 && k < L.k0 + L.n; m.material.color.set(a ? '#ff6a3d' : '#444b53'); m.material.emissive.set(a ? '#ff4a1d' : '#000000'); });
+    const L = list[st.law], dl = !!C.cfg.probe.dual; elems.forEach((m, j) => { const k = dl ? j >> 1 : j, rx = m.userData.rx, a = L && k >= L.k0 && k < L.k0 + L.n; m.material.color.set(a ? (rx ? '#3fa9ff' : '#ff6a3d') : (rx ? '#2d5f8a' : '#444b53')); m.material.emissive.set(a ? (rx ? '#1a7fd6' : '#ff4a1d') : '#000000'); });
     // leque do feixe
     const pos = [], col = [], zz = zc + .15, cOr = new THREE.Color('#ff8a3d');
     const ptsOf = Lw => { const P = [[Lw.xc, Lw.zc, 0], [Lw.xe, 0, 0]]; let s = 0; for (let b = 1; b <= C.legs; b++) { const sb = Math.min(C.range, b * T / Lw.cth); P.push([Lw.xe + dir * sb * Lw.sth, PA.fold(sb * Lw.cth, T), sb]); if (sb >= C.range) break; } return P; };

@@ -238,7 +238,11 @@ PA.prims = function (cfg, W) {
 
 /* ---------- avaliação de um refletor ---------- */
 function Ax(L, s, line) { const ra = L.a / L.wa(s), rb = L.b / L.we(s); return ra * (line ? Math.sqrt(rb) : rb); }
-function att(C, L, s) { return Math.pow(10, -(2 * C.A.a * s + 2 * C.A.weldA * L.wlen(s)) / 20); }
+function att(C, L, s) { return Math.pow(10, -(2 * C.A.a * s + 2 * C.A.weldA * L.wlen(s)) / 20) * (C.dual ? dualF(C, L, s) : 1); }
+/* cabeçote dual (TR): Tx e Rx lado a lado na elevação, inclinados pelo ângulo de teto (roof) para cruzar os feixes
+   na profundidade de cruzamento. A sensibilidade é o produto dos dois feixes de elevação, máxima onde eles se cruzam. */
+function dualF(C, L, s) { const zc = Math.max(2, C.cfg.probe.cross), d = C.cfg.probe.sep / 2 * (1 - s * L.cth / zc), we = L.we(s); return Math.max(.05, Math.exp(-2 * d * d / (we * we))); }
+PA.dualF = dualF;
 PA.Ax = Ax; PA.att = att;
 function elevF(C, L, P, s, yp, hd) {
   const yb = yp + C.tsk * hd, we = L.we(s);
@@ -364,7 +368,7 @@ PA.build = function (cfg) {
   C.NS = 1024; C.DS = C.range / C.NS;
   const vmm = C.L.v / 1000, bw = cfg.probe.bw / 100;
   C.sig = (.88 / (bw * cfg.probe.f)) * vmm / 2 / 1.665; C.lamP = C.L.lam / 2;
-  C.prims = PA.prims(cfg, C.W); segFacets(C);
+  C.dual = !!cfg.probe.dual; C.prims = PA.prims(cfg, C.W); segFacets(C);
   // percurso dentro da solda (anisotropia)
   list.forEach(L => {
     const n = Math.ceil(C.range / .5) + 2, cw = new Float32Array(n); let acc = 0;
@@ -378,7 +382,7 @@ PA.build = function (cfg) {
   let ref = list[0]; list.forEach(L => { if (Math.abs(L.th - 60 * DEG) < Math.abs(ref.th - 60 * DEG)) ref = L; });
   C.refLaw = ref;
   const A0 = ref ? Aref(ref, sMid(ref)) : 1;
-  C.Gref = 20 * Math.log10(.8 / A0) + 26;
+  C.Gref = 20 * Math.log10(.8 / A0) + 26; C.A0 = A0;
   list.forEach(L => {
     const K = new Float32Array(C.NS), Ka = .8 / Aref(L, sMid(L)), Kn = .8 / A0;
     for (let k = 0; k < C.NS; k++) {
@@ -421,6 +425,9 @@ PA.scanAt = function (C, yp) {
       const r = PA.rng(i * 7919 + Math.round(yp * 2) * 104729 + seedB), M = Math.min(1600, Math.ceil(C.range / C.sig * .9));
       for (let j = 0; j < M; j++) { const s = r() * C.range, g = Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r());
         ev.push(s, Math.abs(g) * noiseRms(C, L, Math.max(.5, s)), r() * 6.283); }
+      // ruído da cunha / interface logo abaixo da superfície (zona morta). No dual o Rx não escuta o Tx pela cunha.
+      const rk = (C.dual ? .02 : cfg.scan.wave === 'L' ? .35 : .2), ln = .8 + .4 * C.L.lam;
+      for (let j = 0; j < 30; j++) { const s = r() * 4 * ln, K = L.K[Math.min(C.NS - 1, (s / C.DS) | 0)]; ev.push(s, rk * .8 / K * Math.exp(-s / ln) * (.5 + r() * .7), r() * 6.283); }
     }
     out.push({ ev, env: PA.synth(C, ev, L, C.NS, C.DS, false) });
   });
@@ -474,7 +481,7 @@ PA.volumes = function (C, progress, done) {
 PA.defaultCfg = () => ({
   weld: { type: 'V', T: 20, bevel: 30, rootFace: 1.5, gap: 2, xMid: .5, capOver: 1.5, capH: 2, rootOver: 1.2, rootH: 1.4, hilo: 0, haz: 2, len: 300 },
   mat: Object.assign({ preset: 'aco-carbono' }, PA.MATERIALS['aco-carbono']),
-  probe: { f: 5, bw: 60, nTot: 32, pitch: .6, elev: 10, nAct: 16, first: 1 },
+  probe: { f: 5, bw: 60, nTot: 32, pitch: .6, elev: 10, nAct: 16, first: 1, dual: false, sep: 12, cross: 25 },
   wedge: { mat: 'rexolite', vW: 2330, angle: 36, h1: 6, u1: 9, len: 38, width: 24 },
   scan: { mode: 'S', wave: 'T', a0: 40, a1: 70, astep: 1, eAng: 60, eStep: 1, focus: 'depth', fVal: 20, index: 30, side: 1, skew: 0, legs: 2, range: 0, coupling: 0, transfer: 0 },
   disp: { dGain: 6, corr: 'tcg', refD: 2, gate: { start: 3, width: 140, thr: 20, mode: 'path' }, axis: 'path', rf: false, fold: false, palette: 'amp', noise: true, geo: true, overlay: true },
@@ -505,6 +512,16 @@ PA.SCENARIOS = [
     set: c => { Object.assign(c.weld, { type: 'X', T: 40, bevel: 30, rootFace: 2, gap: 2.5, capOver: 2, capH: 2.5 }); Object.assign(c.probe, { f: 2.25, pitch: 1, nTot: 32, nAct: 16, elev: 12 });
       Object.assign(c.wedge, { angle: 36, h1: 8, u1: 11, len: 50, width: 30 }); Object.assign(c.scan, { index: 45, fVal: 30, a0: 40, a1: 70 }); c.disp.gate.width = 260;
       c.defects = [D('lop', 40, 50), D('escoria', 120, 30, { z: 12, x: -3, h: 2 }), D('lof-entrepasses', 180, 30, { z: 28, x: 2, larg: 8 }), D('lof-bisel', 240, 40, { lado: 'esq', z1: 6, z2: 16 })]; } },
+  { id: 'dla-inox', nome: 'Inox 50 mm, solda austenítica: dual linear (DLA) com onda L',
+    nota: 'Chapa de 50 mm em aço inox 304/316, junta em X com solda austenítica de grão colunar. Cabeçote dual linear de 2,25 MHz (2 × 32 elementos de 10 mm de elevação, Tx e Rx separados de 14 mm, feixes cruzando a 25 mm), onda longitudinal de 45° a 70°, só a perna direta. Desligue "Dual linear" na aba Cabeçote, ou troque para onda transversal, e compare o ruído perto da superfície e dentro da solda.',
+    set: c => { Object.assign(c.weld, { type: 'X', T: 50, bevel: 25, rootFace: 2, gap: 2, xMid: .5, capOver: 2, capH: 2.5, haz: 3 });
+      Object.assign(c.mat, { preset: 'inox-austenitico' }, PA.MATERIALS['inox-austenitico'], { grain: 150 });
+      Object.assign(c.probe, { f: 2.25, bw: 60, nTot: 32, pitch: 1, elev: 10, nAct: 24, first: 1, dual: true, sep: 14, cross: 25 });
+      Object.assign(c.wedge, { mat: 'rexolite', vW: 2330, angle: 20, h1: 9, u1: 10, len: 52, width: 44 });
+      Object.assign(c.scan, { wave: 'L', mode: 'S', a0: 45, a1: 70, astep: 1, focus: 'depth', fVal: 25, index: 30, legs: 1 });
+      Object.assign(c.disp, { corr: 'tcg', dGain: 6 }); c.disp.gate.width = 170;
+      c.defects = [D('lof-bisel', 30, 40, { lado: 'esq', z1: 8, z2: 20 }), D('trinca-raiz', 95, 30, { h: 5, x: 0, incl: 0 }), D('escoria', 150, 25, { x: -2, z: 18, h: 2.5 }),
+        D('poro-agrupado', 200, 20, { z: 30, x: 3, raio: 4, d: 1.5 }), D('lof-bisel', 245, 40, { lado: 'esq', z1: 30, z2: 42 })]; } },
   { id: 'grating', nome: 'Lóbulo de grade: pitch grande em 7,5 MHz',
     nota: 'Pitch de 1 mm em 7,5 MHz passa de λ/2 na cunha. Surgem ecos fantasmas de refletores reais em ângulos errados. Reduza o pitch para 0,5 mm ou a frequência para 5 MHz e veja sumirem.',
     set: c => { Object.assign(c.probe, { f: 7.5, pitch: 1, nAct: 16 }); c.defects = [D('lop', 60, 60), D('sdh', 180, 60, { d: 2, z: 10, x: 0 })]; } },
