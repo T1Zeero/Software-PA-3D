@@ -119,7 +119,7 @@ PA.Scene = function (host) {
     });
     // sonda
     buildProbe(C);
-    lastZ = null; applyMode();
+    applyMode();
   }
 
   function macro(C, I, w, h) {

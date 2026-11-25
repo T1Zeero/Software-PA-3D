@@ -4,9 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Simulador PAUT de soldas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+[hidden]{display:none!important}
 /* VOICE work: a bench tool for an experienced phased array inspector
    IDEA the flaw detector's weld layout (3D, sector, A-scan, top/side/end) beside a full scan plan setup
    PICTURE the welded plate cut at the probe position with the beam fan, driving every view
@@ -29,9 +31,9 @@ h1{font-size:clamp(24px,2.6vw,34px);line-height:1.05;letter-spacing:-.02em;margi
 select,input[type=number]{background:#111417;color:var(--ink);border:1px solid #3a4048;border-radius:6px;font:inherit;font-size:15px;padding:6px 8px;min-height:36px}
 select:focus,input:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
 button{font:inherit;cursor:pointer}
-.app{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-areas:"v3d" "sec" "bar" "asc" "endv" "vols" "setup"}
-@media(min-width:780px){.app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"v3d sec" "bar bar" "asc endv" "vols vols" "setup setup"}}
-@media(min-width:1280px){.app{grid-template-columns:340px minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"setup v3d sec" "setup bar bar" "setup asc endv" "setup vols vols"}}
+.app{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);grid-template-areas:"v3d" "sec" "insp" "bar" "asc" "endv" "vols" "setup"}
+@media(min-width:780px){.app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"v3d sec" "insp insp" "bar bar" "asc endv" "vols vols" "setup setup"}}
+@media(min-width:1280px){.app{grid-template-columns:340px minmax(0,1.08fr) minmax(0,1fr);grid-template-areas:"setup v3d sec" "setup insp insp" "setup bar bar" "setup asc endv" "setup vols vols"}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .card h2{font-size:14px;font-weight:600;margin:0;display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;align-items:baseline}
 .card h2 span{color:var(--mute);font-weight:400;font-size:13px}
@@ -114,6 +116,24 @@ ul.defs details .fields{margin-top:6px;grid-template-columns:minmax(0,1fr)!impor
 .trainrow{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
 .trainrow .ghost{margin:0}
 .volgrid{display:grid;gap:6px}
+#insp{grid-area:insp;gap:10px}
+#insp .seg button{font-size:14px;padding:8px 14px;min-height:40px}
+.ipanel{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 24px;align-items:start}
+@media(max-width:700px){.ipanel{grid-template-columns:minmax(0,1fr)}}
+#dpad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:6px;touch-action:none;user-select:none;-webkit-user-select:none}
+#dpad button{background:#262b31;border:1px solid #3a4048;color:var(--ink);border-radius:8px;font-size:13px;line-height:1.1;padding:2px}
+#dpad button:active{background:var(--acc);color:#1a0d08}
+#dpad .c{grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:11px;text-align:center}
+.icol{display:flex;flex-direction:column;gap:8px}
+.icol .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.icol input[type=text]{background:#111417;color:var(--ink);border:1px solid #3a4048;border-radius:6px;font:inherit;font-size:15px;padding:6px 8px;min-height:36px;flex:1 1 160px}
+kbd{font:12px "IBM Plex Mono",monospace;background:#262b31;border:1px solid #3a4048;border-radius:4px;padding:1px 5px}
+#recDot{width:10px;height:10px;border-radius:50%;background:#ff3b30;display:inline-block;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){#recDot{animation:none}}
+.mini{background:#262b31;border:1px solid #3a4048;color:var(--ink);border-radius:5px;font-size:12px;padding:3px 8px}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .volgrid h3{margin:0;font-size:13px;font-weight:500;color:var(--mute)}
 </style>
 </head>
@@ -149,6 +169,42 @@ ul.defs details .fields{margin-top:6px;grid-template-columns:minmax(0,1fr)!impor
       <span style="margin-left:auto">Clique para escolher a lei</span></div>
   </section>
 
+  <section class="card" id="insp" aria-label="Inspeção">
+    <h2>Modo de trabalho <span id="inspHint">simulação livre, varredura ao vivo com gravação, ou análise de um arquivo de inspeção</span></h2>
+    <div class="seg" id="imode"><button data-m="sim" aria-pressed="true">Simulação</button><button data-m="vivo" aria-pressed="false">Varredura ao vivo</button><button data-m="analise" aria-pressed="false">Análise de arquivo</button></div>
+    <div id="pSim"><p class="note">As vistas de topo, lateral e final mostram o cordão inteiro calculado pelo modelo. Para mover o cabeçote com o teclado e ver o C-scan sendo montado só onde você passou, use Varredura ao vivo.</p></div>
+    <div id="pVivo" class="ipanel" hidden>
+      <div id="dpad" aria-label="Mover cabeçote">
+        <button data-k="rotl" style="grid-column:1;grid-row:1" title="Girar (Q)">⟲ Q</button>
+        <button data-k="up" style="grid-column:2;grid-row:1" title="Frente (W ou seta para cima)">▲<br>Y+</button>
+        <button data-k="rotr" style="grid-column:3;grid-row:1" title="Girar (E)">E ⟳</button>
+        <button data-k="left" style="grid-column:1;grid-row:2" title="Esquerda (A ou seta)">◀<br>X−</button>
+        <span class="c">cabeçote</span>
+        <button data-k="right" style="grid-column:3;grid-row:2" title="Direita (D ou seta)">▶<br>X+</button>
+        <button data-k="down" style="grid-column:2;grid-row:3" title="Trás (S ou seta para baixo)">▼<br>Y−</button>
+      </div>
+      <div class="icol">
+        <p class="note">Segure <kbd>W</kbd><kbd>S</kbd> ou <kbd>↑</kbd><kbd>↓</kbd> para andar ao longo do cordão, <kbd>A</kbd><kbd>D</kbd> ou <kbd>←</kbd><kbd>→</kbd> para aproximar ou afastar do eixo (index), <kbd>Q</kbd><kbd>E</kbd> para girar (skew). <kbd>Shift</kbd> acelera. No celular, segure os botões.</p>
+        <div class="row"><label for="lvSpeed" class="note">Velocidade</label><select id="lvSpeed"><option value="10">10 mm/s</option><option value="20" selected>20 mm/s</option><option value="40">40 mm/s</option></select>
+          <button class="btn" id="lvClear">Limpar C-scan</button></div>
+        <div class="row"><input type="text" id="recPeca" placeholder="Peça ou junta (ex.: J-104)" aria-label="Peça ou junta"><input type="text" id="recInsp" placeholder="Inspetor" aria-label="Inspetor"></div>
+        <div class="row"><input type="text" id="recObs" placeholder="Observações" aria-label="Observações"></div>
+        <div class="row"><button class="btn" id="recBtn">Iniciar gravação</button><span id="recDot" hidden></span><button class="btn" id="openLast" hidden>Analisar o arquivo gravado</button></div>
+        <p class="note" id="recInfo">A gravação funciona como um encoder: cada milímetro em Y guarda o S-scan inteiro. Ao parar, o arquivo de inspeção é baixado.</p>
+      </div>
+    </div>
+    <div id="pAnalise" class="ipanel" hidden>
+      <div class="icol">
+        <span class="btn filebtn">Abrir arquivo de inspeção<input type="file" id="anFile" accept=".json,application/json"></span>
+        <label class="fld" for="anLevel"><span>Nível de registro</span><select id="anLevel"><option value="-10">Referência − 10 dB</option><option value="-6" selected>Referência − 6 dB</option><option value="0">Referência</option></select></label>
+        <label class="fld chk"><input type="checkbox" id="anShow"><span>Mostrar gabarito</span></label>
+        <div class="row"><button class="btn" id="anRedo">Atualizar indicações</button><button class="btn" id="anCsv">Exportar relatório CSV</button></div>
+        <p class="note" id="anCsvInfo"></p>
+      </div>
+      <div class="icol"><p class="note" id="anMeta">Abra um arquivo gravado na Varredura ao vivo. O ganho da barra abaixo funciona como ganho de software sobre os dados gravados.</p><div id="anInds"></div></div>
+    </div>
+  </section>
+
   <section class="card" id="bar" aria-label="Varredura e leituras">
     <div class="ctl">
       <label for="yp">Posição de varredura (Y) <output id="ypO"></output></label>
@@ -180,7 +236,7 @@ ul.defs details .fields{margin-top:6px;grid-template-columns:minmax(0,1fr)!impor
   </section>
 
   <section class="card" id="vols">
-    <h2>Vistas ao longo do cordão <span id="volState"></span></h2>
+    <h2>Vistas ao longo do cordão <span><span id="volSrc"></span>. <span id="volState"></span></span></h2>
     <div class="volgrid">
       <h3>Topo (C-scan): posição transversal em relação ao eixo</h3>
       <div class="fig"><canvas id="topcv"></canvas></div>
@@ -198,5 +254,6 @@ ul.defs details .fields{margin-top:6px;grid-template-columns:minmax(0,1fr)!impor
 <script src="views.js"></script>
 <script src="scene.js"></script>
 <script src="app.js"></script>
+<script src="live.js"></script>
 </body>
 </html>

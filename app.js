@@ -1,7 +1,7 @@
 /* Simulador PAUT: interface e estado */
 (function () {
 'use strict';
-const PA = window.PA, DEG = PA.DEG, f1 = PA.f1, $ = id => document.getElementById(id);
+const PA = window.PA; PA.hooks = PA.hooks || {}; const DEG = PA.DEG, f1 = PA.f1, $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let cfg = PA.defaultCfg(), C = null, S = null, V = null, vtok = null, buildId = 0, scene = null;
@@ -12,8 +12,20 @@ function scenario(id) {
   cfg = PA.defaultCfg(); sc.set(cfg);
   $('scen').value = sc.id; $('scenNote').textContent = sc.nota;
   const d0 = cfg.defects[0]; st.yp = d0 ? Math.min(cfg.weld.len, d0.y + d0.comp / 2) : cfg.weld.len / 2; st.y1 = st.y2 = null;
-  st.law = -1; renderSetup(); rebuild(true);
+  st.law = -1; if (scene) scene.resetCam(); renderSetup(); rebuild(true);
 }
+function loadCfg(c, note) {
+  cfg = c; $('scenNote').textContent = note || ''; st.law = -1; if (scene) scene.resetCam(); renderSetup(); rebuild(true);
+}
+let idxT = 0;
+function shiftIndex(ni, quiet) {
+  ni = Math.max(0, Math.min(200, ni)); if (!C) return; const dx = -C.L.dir * (ni - cfg.scan.index); if (Math.abs(dx) < 1e-9) return;
+  cfg.scan.index = ni; C.L.xf += dx; C.L.list.forEach(L => { L.xe += dx; L.xc += dx; });
+  const el0 = C.L.el; C.L.el = k => { const q = el0(k); return Object.assign({}, q, { x: q.x + dx }); };
+  C.id = ++buildId; if (quiet) return; refresh();
+  clearTimeout(idxT); idxT = setTimeout(() => { rebuild(); if (tab === 'varredura') renderSetup(); }, 700);
+}
+function setSkew(v) { cfg.scan.skew = Math.max(-20, Math.min(20, v)); if (!C) return; C.tsk = Math.tan(cfg.scan.skew * DEG); C.skP = Math.exp(-((cfg.scan.skew / 7) ** 2)); C.skC = Math.exp(-((cfg.scan.skew / 10) ** 2)); refresh(); }
 
 /* ---------- formulários ---------- */
 const MATOPT = Object.entries(PA.MATERIALS).map(([k, v]) => [k, v.nome]).concat([['custom', 'Personalizado']]);
@@ -178,6 +190,7 @@ function rebuild(first) {
   V = null; if (vtok) vtok.cancel = true;
   $('volState').textContent = 'calculando…';
   vtok = PA.volumes(C, p => { $('volState').textContent = 'calculando ' + Math.round(p * 100) + '%'; }, res => { V = res; $('volState').textContent = 'gate A, ' + f1(C.gs) + ' a ' + f1(C.ge) + ' mm'; drawVols(); readouts(); });
+  if (PA.hooks.onRebuild) PA.hooks.onRebuild(C);
   refresh(); renderDerived();
 }
 let raf = 0;
@@ -187,7 +200,8 @@ function draw() {
   st.gmul = Math.pow(10, (cfg.disp.dGain + cfg.scan.transfer) / 20);
   const showDef = st.showDef && (!st.train || st.reveal);
   const vst = Object.assign({}, st, { train: st.train && !st.reveal, showDef });
-  S = PA.scanAt(C, st.yp);
+  S = (PA.hooks.frame && PA.hooks.frame(C, st)) || PA.scanAt(C, st.yp);
+  if (PA.hooks.afterScan) PA.hooks.afterScan(C, S, st);
   st.peak = C.L.list.length ? PA.peak(C, S, st) : null; vst.peak = st.peak;
   PA.drawSector($('seccv'), C, S, vst); PA.drawAscan($('ascv'), C, S, vst);
   drawVols(vst);
@@ -202,13 +216,15 @@ function draw() {
   $('covO').textContent = cfg.weld.type === 'none' ? '' : 'cobertura ' + f1(C.covPct) + '%';
   $('lbar').style.background = PA.paletteCss(cfg.disp.palette);
 }
+const curV = () => (PA.hooks.vol && PA.hooks.vol()) || V;
 function drawVols(vst) {
   vst = vst || Object.assign({}, st, { train: st.train && !st.reveal, showDef: st.showDef && (!st.train || st.reveal) });
-  PA.drawTop($('topcv'), C, V, vst); PA.drawSide($('sidecv'), C, V, vst); PA.drawEnd($('endcv'), C, V, vst);
+  const VV = curV();
+  PA.drawTop($('topcv'), C, VV, vst); PA.drawSide($('sidecv'), C, VV, vst); PA.drawEnd($('endcv'), C, VV, vst);
 }
 function readouts() {
   const p = st.peak, L = p && p.L, g = cfg.disp.gate;
-  const len = p && p.ok && V ? PA.length6dB(C, V, st.yp, p.x) : null;
+  const VV = curV(), len = p && p.ok && VV ? PA.length6dB(C, VV, st.yp, p.x) : null;
   const rows = [
     ['A% no gate', p ? Math.min(999, p.a * 100).toFixed(0) + '%' : '—', p && p.ok ? 'hot' : ''],
     ['Em relação à ref.', p && p.a > 0 ? (v => (v >= 0 ? '+' : '') + f1(v))(20 * Math.log10(p.a / .8) - cfg.disp.dGain) + ' dB' : '—'],
@@ -220,6 +236,8 @@ function readouts() {
   ];
   $('read').innerHTML = rows.map(r => `<div class="${r[2] || ''}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
 }
+
+PA.app = { get cfg() { return cfg; }, get C() { return C; }, st, refresh, rebuild, renderSetup, setY, shiftIndex, setSkew, loadCfg, stop, get V() { return V; } };
 
 /* ---------- início ---------- */
 try { scene = PA.Scene($('v3dhost')); } catch (err) { console.error(err); }

@@ -244,7 +244,9 @@ PA.peak = function (C, S, st) {
 function heat(ctx, data, nx, ny, W, H, m, map, gm, lut) {
   const pw = Math.max(1, Math.round(W - m.l - m.r)), ph = Math.max(1, Math.round(H - m.t - m.b)), img = ctx.createImageData(pw, ph), D = img.data;
   for (let py = 0; py < ph; py++) for (let px = 0; px < pw; px++) {
-    const idx = map(px / pw, py / ph), v = idx < 0 ? 0 : data[idx] * gm, c = Math.min(255, Math.max(0, v * 255 | 0)) * 3, o = (py * pw + px) * 4;
+    const idx = map(px / pw, py / ph), o = (py * pw + px) * 4;
+    if (idx === -2) { D[o] = 38; D[o + 1] = 42; D[o + 2] = 48; D[o + 3] = 255; continue; }
+    const v = idx < 0 ? 0 : data[idx] * gm, c = Math.min(255, Math.max(0, v * 255 | 0)) * 3;
     D[o] = lut[c]; D[o + 1] = lut[c + 1]; D[o + 2] = lut[c + 2]; D[o + 3] = 255; }
   ctx.putImageData(img, Math.round(m.l), Math.round(m.t));
   return { pw, ph };
@@ -253,7 +255,7 @@ PA.drawTop = function (cv, C, V, st) {
   const { W, H, dpr } = fit(cv), ctx = cv.getContext('2d'), cfg = C.cfg, m = { l: 36 * dpr, r: 10 * dpr, t: 8 * dpr, b: 20 * dpr };
   ctx.fillStyle = '#15181c'; ctx.fillRect(0, 0, W, H);
   const lenY = C.len, Yp = y => m.l + y / lenY * (W - m.l - m.r), Xp = x => m.t + (H - m.t - m.b) * (1 - (x + C.XR) / (2 * C.XR));
-  if (V) heat(ctx, V.top, V.nx, V.ny, W, H, m, (u, v) => { const yi = Math.min(V.ny - 1, Math.floor(u * V.ny)), xb = Math.min(V.nx - 1, Math.floor((1 - v) * V.nx)); return yi * V.nx + xb; }, st.gmul, lutOf(cfg));
+  if (V) heat(ctx, V.top, V.nx, V.ny, W, H, m, (u, v) => { const yi = Math.min(V.ny - 1, Math.floor(u * V.ny)), xb = Math.min(V.nx - 1, Math.floor((1 - v) * V.nx)); if (V.vis && !V.vis[yi]) return -2; return yi * V.nx + xb; }, st.gmul, lutOf(cfg));
   const ink = darkPal(cfg) ? 'rgba(230,235,240,.6)' : 'rgba(20,24,30,.55)';
   ctx.strokeStyle = ink; ctx.lineWidth = 1 * dpr;
   const lines = cfg.weld.type === 'none' ? [0] : [-C.W.capHalf, -C.W.g2, 0, C.W.g2, C.W.capHalf];
@@ -268,7 +270,7 @@ PA.drawSide = function (cv, C, V, st) {
   const { W, H, dpr } = fit(cv), ctx = cv.getContext('2d'), cfg = C.cfg, m = { l: 36 * dpr, r: 10 * dpr, t: 8 * dpr, b: 20 * dpr };
   ctx.fillStyle = '#15181c'; ctx.fillRect(0, 0, W, H);
   const lenY = C.len, Yp = y => m.l + y / lenY * (W - m.l - m.r), Zp = z => m.t + (H - m.t - m.b) * z / C.T;
-  if (V) heat(ctx, V.side, V.nz, V.ny, W, H, m, (u, v) => { const yi = Math.min(V.ny - 1, Math.floor(u * V.ny)), zb = Math.min(V.nz - 1, Math.floor(v * V.nz)); return yi * V.nz + zb; }, st.gmul, lutOf(cfg));
+  if (V) heat(ctx, V.side, V.nz, V.ny, W, H, m, (u, v) => { const yi = Math.min(V.ny - 1, Math.floor(u * V.ny)), zb = Math.min(V.nz - 1, Math.floor(v * V.nz)); if (V.vis && !V.vis[yi]) return -2; return yi * V.nz + zb; }, st.gmul, lutOf(cfg));
   const step = niceStep(C.T, H - m.t - m.b, 22 * dpr);
   for (let z = 0; z <= C.T + 1e-6; z += step) txt(ctx, String(z), m.l - 5 * dpr, Zp(z), '#9aa3ad', 'right', 'middle', 11, dpr);
   axisY(ctx, W, H, m, Yp, lenY, dpr);
